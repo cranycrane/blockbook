@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/juju/errors"
 	"github.com/trezor/blockbook/bchain"
 	"github.com/trezor/blockbook/bchain/coins/eth"
 )
@@ -22,6 +23,7 @@ const (
 
 type TronRPC struct {
 	*eth.EthereumRPC
+	Parser *TronParser // Vlastní pole Parser s typem *TronParser
 }
 
 func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType)) (bchain.BlockChain, error) {
@@ -30,8 +32,15 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 		return nil, err
 	}
 
+	var cfg eth.Configuration
+	err = json.Unmarshal(config, &cfg)
+	if err != nil {
+		return nil, errors.Annotatef(err, "Invalid configuration file")
+	}
+
 	s := &TronRPC{
 		EthereumRPC: c.(*eth.EthereumRPC),
+		Parser:      NewTronParser(cfg.BlockAddressesToKeep, cfg.AddressAliases),
 	}
 
 	return s, nil
@@ -48,7 +57,7 @@ var OpenRPC = func(url string) (bchain.EVMRPCClient, bchain.EVMClient, error) {
 	}
 
 	rpcClient := &TronRPCClient{Client: r}
-	ethClient := ethclient.NewClient(r) // Ethereum klient pro kompatibilitu
+	ethClient := ethclient.NewClient(r) // Ethereum client for compatibility
 	tc := &TronClient{
 		Client:    ethClient,
 		rpcClient: rpcClient,
@@ -57,7 +66,7 @@ var OpenRPC = func(url string) (bchain.EVMRPCClient, bchain.EVMClient, error) {
 	return rpcClient, tc, nil
 }
 
-// Initialize Tron inicializuje RPC rozhraní pro Tron
+// Initialize Tron RPC
 func (b *TronRPC) Initialize() error {
 	b.OpenRPC = OpenRPC
 
@@ -78,4 +87,9 @@ func (b *TronRPC) Initialize() error {
 
 	log.Info("TronRPC: initialized Tron blockchain: ", b.Network)
 	return nil
+}
+
+// GetChainParser returns Tron-specific BlockChainParser
+func (b *TronRPC) GetChainParser() bchain.BlockChainParser {
+	return b.Parser
 }
