@@ -23,7 +23,7 @@ const (
 
 type TronRPC struct {
 	*eth.EthereumRPC
-	Parser *TronParser // Vlastní pole Parser s typem *TronParser
+	Parser *TronParser
 }
 
 func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType)) (bchain.BlockChain, error) {
@@ -42,6 +42,8 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 		EthereumRPC: c.(*eth.EthereumRPC),
 		Parser:      NewTronParser(cfg.BlockAddressesToKeep, cfg.AddressAliases),
 	}
+
+	s.EthereumRPC.Parser = s.Parser
 
 	return s, nil
 }
