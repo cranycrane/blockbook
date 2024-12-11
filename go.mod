@@ -7,6 +7,7 @@ require (
 	github.com/ava-labs/coreth v0.12.10-rc.0
 	github.com/bsm/go-vlq v0.0.0-20150828105119-ec6e8d4f5f4e
 	github.com/deckarep/golang-set v1.8.0
+	github.com/decred/base58 v1.0.3
 	github.com/decred/dcrd/chaincfg/chainhash v1.0.2
 	github.com/decred/dcrd/chaincfg/v3 v3.0.0
 	github.com/decred/dcrd/dcrec v1.0.0
@@ -16,7 +17,6 @@ require (
 	github.com/decred/dcrd/txscript/v3 v3.0.0
 	github.com/ethereum/go-ethereum v1.13.14
 	github.com/golang/glog v1.1.0
-	github.com/golang/protobuf v1.5.3
 	github.com/gorilla/websocket v1.4.2
 	github.com/juju/errors v0.0.0-20170703010042-c7d06af17c68
 	github.com/linxGnu/grocksdb v1.7.7
@@ -24,6 +24,7 @@ require (
 	github.com/martinboehm/btcd v0.0.0-20221101112928-408689e15809
 	github.com/martinboehm/btcutil v0.0.0-20211010173611-6ef1889c1819
 	github.com/martinboehm/golang-socketio v0.0.0-20180414165752-f60b0a8befde
+	github.com/mr-tron/base58 v1.2.0
 	github.com/pebbe/zmq4 v1.2.1
 	github.com/pirk/ecashaddr-converter v0.0.0-20220121162910-c6cb45163b29
 	github.com/pirk/ecashutil v0.0.0-20220124103933-d37f548d249e
@@ -55,7 +56,6 @@ require (
 	github.com/dchest/blake256 v1.0.0 // indirect
 	github.com/dchest/siphash v1.2.1 // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
-	github.com/decred/base58 v1.0.3 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.0 // indirect
 	github.com/decred/dcrd/crypto/ripemd160 v1.0.1 // indirect
 	github.com/decred/dcrd/dcrec/edwards/v2 v2.0.1 // indirect
@@ -68,6 +68,7 @@ require (
 	github.com/go-logr/logr v1.3.0 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
+	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.5-0.20220116011046-fa5810519dcb // indirect
 	github.com/google/renameio/v2 v2.0.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect
@@ -80,7 +81,6 @@ require (
 	github.com/kkdai/bstream v0.0.0-20171226095907-f71540b9dfdc // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
-	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
@@ -123,6 +123,8 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	rsc.io/tmplfunc v0.0.3 // indirect
 )
+
+//replace github.com/ethereum/go-ethereum => ./go-ethereum
 
 // replace github.com/martinboehm/btcutil => ../btcutil
 
