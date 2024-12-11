@@ -58,7 +58,7 @@ type EthereumRPC struct {
 	RPC                   bchain.EVMRPCClient
 	MainNetChainID        Network
 	Timeout               time.Duration
-	Parser                *EthereumParser
+	Parser                BlockChainParser
 	PushHandler           func(bchain.NotificationType)
 	OpenRPC               func(string) (bchain.EVMRPCClient, bchain.EVMClient, error)
 	Mempool               *bchain.MempoolEthereumType
@@ -784,7 +784,7 @@ func (b *EthereumRPC) GetBlock(hash string, height uint32) (*bchain.Block, error
 	btxs := make([]bchain.Tx, len(body.Transactions))
 	for i := range body.Transactions {
 		tx := &body.Transactions[i]
-		btx, err := b.Parser.ethTxToTx(tx, &bchain.RpcReceipt{Logs: logs[tx.Hash]}, &internalData[i], bbh.Time, uint32(bbh.Confirmations), true)
+		btx, err := b.Parser.TxToTx(tx, &bchain.RpcReceipt{Logs: logs[tx.Hash]}, &internalData[i], bbh.Time, uint32(bbh.Confirmations), true)
 		if err != nil {
 			return nil, errors.Annotatef(err, "hash %v, height %v, txid %v", hash, height, tx.Hash)
 		}
@@ -852,7 +852,7 @@ func (b *EthereumRPC) GetTransaction(txid string) (*bchain.Tx, error) {
 	var btx *bchain.Tx
 	if tx.BlockNumber == "" {
 		// mempool tx
-		btx, err = b.Parser.ethTxToTx(tx, nil, nil, 0, 0, true)
+		btx, err = b.Parser.TxToTx(tx, nil, nil, 0, 0, true)
 		if err != nil {
 			return nil, errors.Annotatef(err, "txid %v", txid)
 		}
@@ -885,7 +885,7 @@ func (b *EthereumRPC) GetTransaction(txid string) (*bchain.Tx, error) {
 		if err != nil {
 			return nil, errors.Annotatef(err, "txid %v", txid)
 		}
-		btx, err = b.Parser.ethTxToTx(tx, &receipt, nil, time, confirmations, true)
+		btx, err = b.Parser.TxToTx(tx, &receipt, nil, time, confirmations, true)
 		if err != nil {
 			return nil, errors.Annotatef(err, "txid %v", txid)
 		}
