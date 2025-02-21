@@ -187,7 +187,7 @@ func (c *TronClient) NetworkID(ctx context.Context) (*big.Int, error) {
 	switch ver {
 	case "0x2b6653dc":
 		return big.NewInt(11111), nil
-	case "0x94a9059e":
+	case "0xcd8690dc":
 		return big.NewInt(201910292), nil
 	default:
 		return nil, fmt.Errorf("invalid net_version result %q", ver)
