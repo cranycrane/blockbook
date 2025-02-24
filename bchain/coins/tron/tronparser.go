@@ -81,6 +81,28 @@ func (p *TronParser) GetAddressesFromAddrDesc(desc bchain.AddressDescriptor) ([]
 	return []string{base58Addr}, true, nil
 }
 
+func (p *TronParser) ConvertToBase58Descriptor(address string) (string, error) {
+	txDesc, err := p.GetAddrDescFromAddress(address)
+	if err != nil {
+		return "", err
+	}
+
+	if !p.IsTronAddress(txDesc) {
+		return "", errors.New("invalid Tron address descriptor: must start with '41' and have correct length")
+	}
+
+	return base58.Encode(txDesc), nil
+}
+
+// FormatAddressAlias adds .tron to a name alias
+func (p *TronParser) FormatAddressAlias(address string, name string) string {
+	return name + ".tron"
+}
+
+func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
+	return len(desc) == TronTypeAddressDescriptorLen && desc[0] == 0x41
+}
+
 func (p *TronParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error) {
 	txid := tx.Hash
 	var (
@@ -224,26 +246,4 @@ func (p *TronParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bchain.
 	}
 
 	return transfers, nil
-}
-
-func (p *TronParser) ConvertToBase58Descriptor(address string) (string, error) {
-	txDesc, err := p.GetAddrDescFromAddress(address)
-	if err != nil {
-		return "", err
-	}
-
-	if !p.IsTronAddress(txDesc) {
-		return "", errors.New("invalid Tron address descriptor: must start with '41' and have correct length")
-	}
-
-	return base58.Encode(txDesc), nil
-}
-
-// FormatAddressAlias adds .tron to a name alias
-func (p *TronParser) FormatAddressAlias(address string, name string) string {
-	return name + ".tron"
-}
-
-func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
-	return len(desc) == TronTypeAddressDescriptorLen && desc[0] == 0x41
 }
