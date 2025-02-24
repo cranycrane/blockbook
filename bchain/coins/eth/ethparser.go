@@ -14,7 +14,7 @@ import (
 )
 
 // EthereumTypeAddressDescriptorLen - the AddressDescriptor of EthereumType has fixed length
-const EthereumTypeAddressDescriptorLen = 20
+const EthereumTypeAddressDescriptorLen = 25
 
 // EthereumTypeTxidLen - the length of Txid
 const EthereumTypeTxidLen = 32
