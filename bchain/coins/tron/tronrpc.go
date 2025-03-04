@@ -93,8 +93,25 @@ func (b *TronRPC) Initialize() error {
 	b.NewBlock = &TronNewBlock{channel: make(chan *types.Header)}
 	b.NewTx = &TronNewTx{channel: make(chan common.Hash)}
 
-	b.Testnet = false
-	b.Network = "tron-mainnet"
+	ctx, cancel := context.WithTimeout(context.Background(), b.Timeout)
+	defer cancel()
+
+	id, err := b.Client.NetworkID(ctx)
+	if err != nil {
+		return err
+	}
+
+	// parameters for getInfo request
+	switch eth.Network(id.Uint64()) {
+	case MainNet:
+		b.Testnet = false
+		b.Network = "mainnet"
+	case TestNetNile:
+		b.Testnet = true
+		b.Network = "nile"
+	default:
+		return errors.Errorf("Unknown network id %v", id)
+	}
 
 	log.Info("TronRPC: initialized Tron blockchain: ", b.Network)
 	return nil
