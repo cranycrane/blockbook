@@ -13,8 +13,6 @@ import (
 	"github.com/trezor/blockbook/bchain/coins/eth"
 )
 
-type Network uint32
-
 const (
 	// MainNet is production network
 	MainNet     eth.Network = 11111
@@ -120,4 +118,44 @@ func (b *TronRPC) Initialize() error {
 // GetChainParser returns Tron-specific BlockChainParser
 func (b *TronRPC) GetChainParser() bchain.BlockChainParser {
 	return b.Parser
+}
+
+func (b *TronRPC) CreateMempool(chain bchain.BlockChain) (bchain.Mempool, error) {
+	if b.Mempool == nil {
+		b.Mempool = bchain.NewMempoolEthereumType(chain, b.ChainConfig.MempoolTxTimeoutHours, b.ChainConfig.QueryBackendOnMempoolResync)
+	}
+	return b.Mempool, nil
+}
+
+func (b *TronRPC) InitializeMempool(addrDescForOutpoint bchain.AddrDescForOutpointFunc, onNewTxAddr bchain.OnNewTxAddrFunc, onNewTx bchain.OnNewTxFunc) error {
+	if b.Mempool == nil {
+		return errors.New("Tron Mempool not created")
+	}
+	b.Mempool.OnNewTxAddr = onNewTxAddr
+	b.Mempool.OnNewTx = onNewTx
+
+	if b.mq == nil {
+		mq, err := bchain.NewMQ(b.ChainConfig.MessageQueueBinding, b.PushHandler)
+		if err != nil {
+			return err
+		}
+		b.mq = mq
+	}
+
+	return nil
+}
+
+func (b *TronRPC) Shutdown(ctx context.Context) error {
+	if b.mq != nil {
+		if err := b.mq.Shutdown(ctx); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Tron does not have any method for getting mempool transactions (does not support parameter 'pending' in eth_getBlockByNumber)
+// https://developers.tron.network/reference/eth_getblockbynumber
+func (n *TronRPC) GetMempoolTransactions() ([]string, error) {
+	return nil, nil
 }
