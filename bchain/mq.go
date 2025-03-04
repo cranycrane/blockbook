@@ -41,11 +41,11 @@ func NewMQ(binding string, callback func(NotificationType)) (*MQ, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = socket.SetSubscribe("hashblock")
+	err = socket.SetSubscribe("block") // temporary
 	if err != nil {
 		return nil, err
 	}
-	err = socket.SetSubscribe("hashtx")
+	err = socket.SetSubscribe("transaction") // temporary
 	if err != nil {
 		return nil, err
 	}
@@ -92,12 +92,13 @@ func (mq *MQ) run(callback func(NotificationType)) {
 		} else {
 			repeatedError = false
 		}
-		if len(msg) >= 3 {
+
+		if len(msg) >= 2 { // why 3?
 			var nt NotificationType
 			switch string(msg[0]) {
-			case "hashblock":
+			case "blockTrigger": // temporary
 				nt = NotificationNewBlock
-			case "hashtx":
+			case "transactionTrigger": // temporary
 				nt = NotificationNewTx
 			default:
 				nt = NotificationUnknown
@@ -121,12 +122,12 @@ func (mq *MQ) Shutdown(ctx context.Context) error {
 	if mq.isRunning {
 		go func() {
 			// if errors in the closing sequence, let it close ungracefully
-			if err := mq.socket.SetUnsubscribe("hashtx"); err != nil {
-				mq.finished <- err
+			if err := mq.socket.SetUnsubscribe("transaction"); err != nil {
+				mq.finished <- err // temporary
 				return
 			}
-			if err := mq.socket.SetUnsubscribe("hashblock"); err != nil {
-				mq.finished <- err
+			if err := mq.socket.SetUnsubscribe("block"); err != nil {
+				mq.finished <- err // temporary
 				return
 			}
 			if err := mq.socket.Unbind(mq.binding); err != nil {
