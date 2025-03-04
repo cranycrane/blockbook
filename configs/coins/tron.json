@@ -7,7 +7,7 @@
     },
     "ports": {
         "backend_rpc": 8545,
-        "backend_message_queue": 0,
+        "backend_message_queue": 5555,
         "backend_p2p": 1111,
         "backend_http": 8090,
         "blockbook_internal": 9100,
@@ -15,7 +15,8 @@
     },
     "ipc": {
         "rpc_url_template": "ws://127.0.0.1:{{.Ports.BackendRPC}}",
-        "rpc_timeout": 25
+        "rpc_timeout": 25,
+        "message_queue_binding_template": "tcp://127.0.0.1:{{.Ports.BackendMessageQueue}}"
     },
     "backend": {
         "package_name": "backend-tron",
