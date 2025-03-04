@@ -18,12 +18,19 @@ type Network uint32
 const (
 	// MainNet is production network
 	MainNet     eth.Network = 11111
-	TestNetNile Network     = 201910292
+	TestNetNile eth.Network = 201910292
 )
+
+type TronConfiguration struct {
+	eth.Configuration
+	MessageQueueBinding string `json:"message_queue_binding"`
+}
 
 type TronRPC struct {
 	*eth.EthereumRPC
-	Parser *TronParser
+	Parser      *TronParser
+	ChainConfig *TronConfiguration
+	mq          *bchain.MQ
 }
 
 func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType)) (bchain.BlockChain, error) {
@@ -32,10 +39,10 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 		return nil, err
 	}
 
-	var cfg eth.Configuration
+	var cfg TronConfiguration
 	err = json.Unmarshal(config, &cfg)
 	if err != nil {
-		return nil, errors.Annotatef(err, "Invalid configuration file")
+		return nil, errors.Annotatef(err, "Invalid Tron configuration file")
 	}
 
 	s := &TronRPC{
@@ -44,6 +51,8 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 	}
 
 	s.EthereumRPC.Parser = s.Parser
+	s.ChainConfig = &cfg
+	s.PushHandler = pushHandler
 
 	return s, nil
 }
