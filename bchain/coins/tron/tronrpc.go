@@ -115,6 +115,49 @@ func (b *TronRPC) Initialize() error {
 	return nil
 }
 
+// GetBestBlockHash returns hash of the tip of the best-block-chain
+// need to overwrite this because the getBestHeader method in EthRpc is
+// relying on the subscription
+// known bug: the networkId does not get updated, because it is also
+// relying on the getBestHeader method.
+func (b *TronRPC) GetBestBlockHash() (string, error) {
+	var err error
+	var header bchain.EVMHeader
+
+	header, err = b.getBestHeader()
+	if err != nil {
+		return "", err
+	}
+
+	return header.Hash(), nil
+}
+
+// GetBestBlockHeight returns height of the tip of the best-block-chain
+func (b *TronRPC) GetBestBlockHeight() (uint32, error) {
+	var err error
+	var header bchain.EVMHeader
+
+	header, err = b.getBestHeader()
+	if err != nil {
+		return 0, err
+	}
+
+	return uint32(header.Number().Uint64()), nil
+}
+
+func (b *TronRPC) getBestHeader() (bchain.EVMHeader, error) {
+	var err error
+	var header bchain.EVMHeader
+	ctx, cancel := context.WithTimeout(context.Background(), b.Timeout)
+	defer cancel()
+	header, err = b.Client.HeaderByNumber(ctx, nil)
+	if err != nil {
+		b.UpdateBestHeader(nil)
+		return nil, err
+	}
+	return header, nil
+}
+
 // GetChainParser returns Tron-specific BlockChainParser
 func (b *TronRPC) GetChainParser() bchain.BlockChainParser {
 	return b.Parser
