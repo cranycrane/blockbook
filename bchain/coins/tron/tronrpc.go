@@ -202,3 +202,8 @@ func (b *TronRPC) Shutdown(ctx context.Context) error {
 func (n *TronRPC) GetMempoolTransactions() ([]string, error) {
 	return nil, nil
 }
+
+// EthereumTypeGetNonce returns current balance of an address
+func (b *TronRPC) EthereumTypeGetNonce(addrDesc bchain.AddressDescriptor) (uint64, error) {
+	return 0, nil
+}
