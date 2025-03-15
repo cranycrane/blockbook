@@ -32,9 +32,9 @@ func (c *TronClient) BalanceAt(ctx context.Context, addrDesc bchain.AddressDescr
 	return c.Client.BalanceAt(ctx, common.BytesToAddress(addrDesc), blockNumber)
 }
 
-// NonceAt returns the nonce for the given account at a specific block, or latest known block if no block number is provided
+// NonceAt is not supported by Tron RPC
 func (c *TronClient) NonceAt(ctx context.Context, addrDesc bchain.AddressDescriptor, blockNumber *big.Int) (uint64, error) {
-	return c.Client.NonceAt(ctx, common.BytesToAddress(addrDesc), blockNumber)
+	return 0, nil
 }
 
 // TronHash wraps a transaction hash to implement the EVMHash interface
