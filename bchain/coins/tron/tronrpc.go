@@ -152,9 +152,9 @@ func (b *TronRPC) getBestHeader() (bchain.EVMHeader, error) {
 	defer cancel()
 	header, err = b.Client.HeaderByNumber(ctx, nil)
 	if err != nil {
-		b.UpdateBestHeader(nil)
 		return nil, err
 	}
+	b.UpdateBestHeader(header)
 	return header, nil
 }
 
