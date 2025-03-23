@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/trezor/blockbook/bchain"
 	"github.com/trezor/blockbook/bchain/coins/eth"
+	"strings"
 )
 
 // TronTypeAddressDescriptorLen - the AddressDescriptor of TronType has fixed length
@@ -178,6 +179,24 @@ func (p *TronParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceip
 		},
 		CoinSpecificData: ct,
 	}, nil
+}
+
+func (p *TronParser) ParseInputData(signatures *[]bchain.FourByteSignature, data string) *bchain.EthereumParsedInputData {
+	parsed := p.EthereumParser.ParseInputData(signatures, data)
+
+	if parsed == nil {
+		return nil
+	}
+
+	for i, param := range parsed.Params {
+		if param.Type == "address" || strings.HasPrefix(param.Type, "address[") {
+			for j, v := range param.Values {
+				parsed.Params[i].Values[j] = ToTronAddressFromAddress(v)
+			}
+		}
+	}
+
+	return parsed
 }
 
 func (p *TronParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bchain.TokenTransfers, error) {
