@@ -8,7 +8,7 @@
     "ports": {
         "backend_rpc": 8545,
         "backend_message_queue": 5555,
-        "backend_p2p": 201910292,
+        "backend_p2p": 18888,
         "backend_http": 8090,
         "blockbook_internal": 9100,
         "blockbook_public": 9130
