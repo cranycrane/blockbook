@@ -3,6 +3,7 @@ package tron
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -11,12 +12,22 @@ import (
 	"github.com/juju/errors"
 	"github.com/trezor/blockbook/bchain"
 	"github.com/trezor/blockbook/bchain/coins/eth"
+	"math/big"
 )
+
+// todo look at GetContractInfo
+// todo look at EthereumTypeGetErc20ContractBalance
+// todo look at GetTokenURI
 
 const (
 	// MainNet is production network
 	MainNet     eth.Network = 11111
 	TestNetNile eth.Network = 201910292
+
+	TRC10TokenType   bchain.TokenTypeName = "TRC10"
+	TRC20TokenType   bchain.TokenTypeName = "TRC20"
+	TRC721TokenType  bchain.TokenTypeName = "TRC721"
+	TRC1155TokenType bchain.TokenTypeName = "TRC1155"
 )
 
 type TronConfiguration struct {
@@ -42,6 +53,8 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 	if err != nil {
 		return nil, errors.Annotatef(err, "Invalid Tron configuration file")
 	}
+
+	bchain.EthereumTokenTypeMap = []bchain.TokenTypeName{TRC20TokenType, TRC721TokenType, TRC1155TokenType}
 
 	s := &TronRPC{
 		EthereumRPC: c.(*eth.EthereumRPC),
@@ -199,11 +212,22 @@ func (b *TronRPC) Shutdown(ctx context.Context) error {
 
 // Tron does not have any method for getting mempool transactions (does not support parameter 'pending' in eth_getBlockByNumber)
 // https://developers.tron.network/reference/eth_getblockbynumber
-func (n *TronRPC) GetMempoolTransactions() ([]string, error) {
+func (b *TronRPC) GetMempoolTransactions() ([]string, error) {
 	return nil, nil
+}
+
+func (b *TronRPC) EthereumTypeGetBalance(addrDesc bchain.AddressDescriptor) (*big.Int, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), b.Timeout)
+	defer cancel()
+	fmt.Printf("Original addrDesc bytes: %x\n", addrDesc)
+	fmt.Printf("Original addrDesc length: %d\n", len(addrDesc))
+
+	return b.Client.BalanceAt(ctx, addrDesc, nil)
 }
 
 // EthereumTypeGetNonce returns current balance of an address
 func (b *TronRPC) EthereumTypeGetNonce(addrDesc bchain.AddressDescriptor) (uint64, error) {
-	return 0, nil
+	ctx, cancel := context.WithTimeout(context.Background(), b.Timeout)
+	defer cancel()
+	return b.Client.NonceAt(ctx, addrDesc, nil)
 }
