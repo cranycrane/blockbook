@@ -21,13 +21,13 @@ func TestTronParser_GetAddrDescFromAddress(t *testing.T) {
 		{
 			name:    "Base58 Tron Address",
 			args:    args{address: "TJngGWiRMLgNFScEybQxLEKQMNdB4nR6Vx"},
-			want:    "4160bb513e91aa723a10a4020ae6fcce39bce7e240c0907a33", // Hexadecimal format with prefix 41
+			want:    "60bb513e91aa723a10a4020ae6fcce39bce7e240", // Hexadecimal format with prefix 41
 			wantErr: false,
 		},
 		{
 			name:    "Hex Tron Address as from JSON-RPC",
 			args:    args{address: "0xef51c82ea6336ba1544c4a182a7368e9fbe28274"},
-			want:    "41ef51c82ea6336ba1544c4a182a7368e9fbe28274f7a98e61", // Hexadecimal format with prefix 41
+			want:    "ef51c82ea6336ba1544c4a182a7368e9fbe28274", // descriptor without prefix and checksum -> len = 20
 			wantErr: false,
 		},
 		{
@@ -65,15 +65,15 @@ func TestTronParser_GetAddressesFromAddrDesc(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name:    "Hex to Base58 Tron Address",
-			args:    args{desc: "41f3f1c189594e2642e5d42d7669b4ec60a69802a9aa8f8b5c"},
-			want:    []string{"TYD4pB7wGi1p8zK67rBTV3KdfEb9nvNDXh"}, // Expected Base58 address
+			name:    "Desc to Base58 Tron Address",
+			args:    args{desc: "f3f1c189594e2642e5d42d7669b4ec60a69802a9"},
+			want:    []string{"TYD4pB7wGi1p8zK67rBTV3KdfEb9nvNDXh"},
 			wantErr: false,
 		},
 		{
-			name:    "Hex to Base58 Tron Address 2",
-			args:    args{desc: "41ef51c82ea6336ba1544c4a182a7368e9fbe28274f7a98e61"},
-			want:    []string{"TXncUDXYkRCmwhFikxYMutwAy93fbhPbbv"}, // Expected Base58 address
+			name:    "Desc to Base58 Tron Address 2",
+			args:    args{desc: "ef51c82ea6336ba1544c4a182a7368e9fbe28274"},
+			want:    []string{"TXncUDXYkRCmwhFikxYMutwAy93fbhPbbv"},
 			wantErr: false,
 		},
 		{
