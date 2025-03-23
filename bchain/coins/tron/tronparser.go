@@ -209,20 +209,6 @@ func (p *TronParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bchain.
 			transfers[i].To = to
 		}
 
-		// Convert type (ERC20 -> TRC20, etc.)
-		// Convert type (TokenType) to Tron-specific names
-		switch transfer.Type {
-		case bchain.FungibleToken: // ERC20 equivalent
-			transfers[i].Type = bchain.FungibleToken // TRC20 equivalent
-		case bchain.NonFungibleToken: // ERC721 equivalent
-			transfers[i].Type = bchain.NonFungibleToken // TRC721 equivalent
-		case bchain.MultiToken: // ERC1155 equivalent
-			transfers[i].Type = bchain.MultiToken // TRC1155 equivalent
-		default:
-			// Handle unknown or new types (optional)
-			// Leave as is, or log/flag for further investigation
-		}
-
 	}
 
 	return transfers, nil
