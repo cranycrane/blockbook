@@ -79,6 +79,31 @@ func TestParseInputData(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Return Energy (dab0fe27)",
+			signatures: &[]bchain.FourByteSignature{
+				{
+					Name:       "returnEnergy",
+					Parameters: []string{"address", "uint256"},
+				},
+			},
+			data: "0xdab0fe27000000000000000000000000e18657b3968394ae9a68f7dc93c110d84f2b079e000000000000000000000000000000000000000000000000000000016139cc53",
+			want: &bchain.EthereumParsedInputData{
+				MethodId: "0xdab0fe27",
+				Name:     "Return Energy",
+				Function: "returnEnergy(address, uint256)",
+				Params: []bchain.EthereumParsedInputParam{
+					{
+						Type:   "address",
+						Values: []string{"TWXfyWNZCeewDCpATk7i6E3X5CwGrFEkg6"},
+					},
+					{
+						Type:   "uint256",
+						Values: []string{"5926145107"},
+					},
+				},
+			},
+		},
 	}
 	parser := NewTronParser(1, false)
 
