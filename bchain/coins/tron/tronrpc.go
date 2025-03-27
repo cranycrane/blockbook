@@ -191,7 +191,14 @@ func (b *TronRPC) InitializeMempool(addrDescForOutpoint bchain.AddrDescForOutpoi
 	b.Mempool.OnNewTx = onNewTx
 
 	if b.mq == nil {
-		mq, err := bchain.NewMQ(b.ChainConfig.MessageQueueBinding, b.PushHandler)
+		tronTopics := bchain.SubscriptionTopics{
+			BlockSubscribe: "block",
+			BlockReceive:   "blockTrigger",
+			TxSubscribe:    "transaction",
+			TxReceive:      "transactionTrigger",
+		}
+
+		mq, err := bchain.NewMQ(b.ChainConfig.MessageQueueBinding, b.PushHandler, tronTopics)
 		if err != nil {
 			return err
 		}

@@ -9,6 +9,13 @@ import (
 	zmq "github.com/pebbe/zmq4"
 )
 
+type SubscriptionTopics struct {
+	BlockSubscribe string
+	BlockReceive   string
+	TxSubscribe    string
+	TxReceive      string
+}
+
 // MQ is message queue listener handle
 type MQ struct {
 	context   *zmq.Context
@@ -16,6 +23,7 @@ type MQ struct {
 	isRunning bool
 	finished  chan error
 	binding   string
+	subs      SubscriptionTopics
 }
 
 // NotificationType is type of notification
@@ -32,7 +40,7 @@ const (
 
 // NewMQ creates new Bitcoind ZeroMQ listener
 // callback function receives messages
-func NewMQ(binding string, callback func(NotificationType)) (*MQ, error) {
+func NewMQ(binding string, callback func(NotificationType), subs SubscriptionTopics) (*MQ, error) {
 	context, err := zmq.NewContext()
 	if err != nil {
 		return nil, err
@@ -41,11 +49,11 @@ func NewMQ(binding string, callback func(NotificationType)) (*MQ, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = socket.SetSubscribe("block") // temporary
+	err = socket.SetSubscribe(subs.BlockSubscribe)
 	if err != nil {
 		return nil, err
 	}
-	err = socket.SetSubscribe("transaction") // temporary
+	err = socket.SetSubscribe(subs.TxSubscribe)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +66,7 @@ func NewMQ(binding string, callback func(NotificationType)) (*MQ, error) {
 		return nil, err
 	}
 	glog.Info("MQ listening to ", binding)
-	mq := &MQ{context, socket, true, make(chan error), binding}
+	mq := &MQ{context, socket, true, make(chan error), binding, subs}
 	go mq.run(callback)
 	return mq, nil
 }
@@ -96,9 +104,9 @@ func (mq *MQ) run(callback func(NotificationType)) {
 		if len(msg) >= 2 { // why 3?
 			var nt NotificationType
 			switch string(msg[0]) {
-			case "blockTrigger": // temporary
+			case mq.subs.BlockReceive:
 				nt = NotificationNewBlock
-			case "transactionTrigger": // temporary
+			case mq.subs.TxReceive:
 				nt = NotificationNewTx
 			default:
 				nt = NotificationUnknown
@@ -122,12 +130,12 @@ func (mq *MQ) Shutdown(ctx context.Context) error {
 	if mq.isRunning {
 		go func() {
 			// if errors in the closing sequence, let it close ungracefully
-			if err := mq.socket.SetUnsubscribe("transaction"); err != nil {
-				mq.finished <- err // temporary
+			if err := mq.socket.SetUnsubscribe(mq.subs.BlockSubscribe); err != nil {
+				mq.finished <- err
 				return
 			}
-			if err := mq.socket.SetUnsubscribe("block"); err != nil {
-				mq.finished <- err // temporary
+			if err := mq.socket.SetUnsubscribe(mq.subs.TxSubscribe); err != nil {
+				mq.finished <- err
 				return
 			}
 			if err := mq.socket.Unbind(mq.binding); err != nil {
