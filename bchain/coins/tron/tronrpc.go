@@ -15,10 +15,6 @@ import (
 	"math/big"
 )
 
-// todo look at GetContractInfo
-// todo look at EthereumTypeGetErc20ContractBalance
-// todo look at GetTokenURI
-
 const (
 	// MainNet is production network
 	MainNet     eth.Network = 11111
