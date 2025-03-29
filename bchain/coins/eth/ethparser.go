@@ -30,15 +30,21 @@ type BlockChainParser interface {
 // EthereumParser handle
 type EthereumParser struct {
 	*bchain.BaseParser
+	FormatAddressFunc     func(addr string) string
+	FromDescToAddressFunc func(addrDesc bchain.AddressDescriptor) string
 }
 
 // NewEthereumParser returns new EthereumParser instance
 func NewEthereumParser(b int, addressAliases bool) *EthereumParser {
-	return &EthereumParser{&bchain.BaseParser{
-		BlockAddressesToKeep: b,
-		AmountDecimalPoint:   EtherAmountDecimalPoint,
-		AddressAliases:       addressAliases,
-	}}
+	return &EthereumParser{
+		BaseParser: &bchain.BaseParser{
+			BlockAddressesToKeep: b,
+			AmountDecimalPoint:   EtherAmountDecimalPoint,
+			AddressAliases:       addressAliases,
+		},
+		FormatAddressFunc:     EIP55AddressFromAddress,
+		FromDescToAddressFunc: EIP55Address,
+	}
 }
 
 type rpcHeader struct {
@@ -79,20 +85,20 @@ func (p *EthereumParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcRe
 	)
 	if len(tx.From) > 2 {
 		if fixEIP55 {
-			tx.From = EIP55AddressFromAddress(tx.From)
+			tx.From = p.FormatAddressFunc(tx.From)
 		}
 		fa = []string{tx.From}
 	}
 	if len(tx.To) > 2 {
 		if fixEIP55 {
-			tx.To = EIP55AddressFromAddress(tx.To)
+			tx.To = p.FormatAddressFunc(tx.To)
 		}
 		ta = []string{tx.To}
 	}
 	if fixEIP55 && receipt != nil && receipt.Logs != nil {
 		for _, l := range receipt.Logs {
 			if len(l.Address) > 2 {
-				l.Address = EIP55AddressFromAddress(l.Address)
+				l.Address = p.FormatAddressFunc(l.Address)
 			}
 		}
 	}
@@ -104,8 +110,8 @@ func (p *EthereumParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcRe
 			if fixEIP55 {
 				for i := range internalData.Transfers {
 					it := &internalData.Transfers[i]
-					it.From = EIP55AddressFromAddress(it.From)
-					it.To = EIP55AddressFromAddress(it.To)
+					it.From = p.FormatAddressFunc(it.From)
+					it.To = p.FormatAddressFunc(it.To)
 				}
 			}
 		}
@@ -213,7 +219,7 @@ func EIP55AddressFromAddress(address string) string {
 
 // GetAddressesFromAddrDesc returns addresses for given address descriptor with flag if the addresses are searchable
 func (p *EthereumParser) GetAddressesFromAddrDesc(addrDesc bchain.AddressDescriptor) ([]string, bool, error) {
-	return []string{EIP55Address(addrDesc)}, true, nil
+	return []string{p.FromDescToAddressFunc(addrDesc)}, true, nil
 }
 
 // GetScriptFromAddrDesc returns output script for given address descriptor
@@ -368,7 +374,7 @@ func (p *EthereumParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
 	rt := bchain.RpcTransaction{
 		AccountNonce: hexutil.EncodeUint64(pt.Tx.AccountNonce),
 		BlockNumber:  hexutil.EncodeUint64(uint64(pt.BlockNumber)),
-		From:         EIP55Address(pt.Tx.From),
+		From:         p.FromDescToAddressFunc(pt.Tx.From),
 		GasLimit:     hexutil.EncodeUint64(pt.Tx.GasLimit),
 		Hash:         hexutil.Encode(pt.Tx.Hash),
 		Payload:      hexutil.Encode(pt.Tx.Payload),
@@ -376,7 +382,7 @@ func (p *EthereumParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
 		// R:                hexEncodeBig(pt.R),
 		// S:                hexEncodeBig(pt.S),
 		// V:                hexEncodeBig(pt.V),
-		To:               EIP55Address(pt.Tx.To),
+		To:               p.FromDescToAddressFunc(pt.Tx.To),
 		TransactionIndex: hexutil.EncodeUint64(uint64(pt.Tx.TransactionIndex)),
 		Value:            hexEncodeBig(pt.Tx.Value),
 	}
@@ -393,7 +399,7 @@ func (p *EthereumParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
 				topics[j] = hexutil.Encode(t)
 			}
 			rr.Logs[i] = &bchain.RpcLog{
-				Address: EIP55Address(l.Address),
+				Address: p.FromDescToAddressFunc(l.Address),
 				Data:    hexutil.Encode(l.Data),
 				Topics:  topics,
 			}

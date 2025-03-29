@@ -30,6 +30,8 @@ type TronParser struct {
 func NewTronParser(b int, addressAliases bool) *TronParser {
 	ethParser := eth.NewEthereumParser(b, addressAliases)
 	ethParser.AmountDecimalPoint = TronAmountDecimalPoint
+	ethParser.FormatAddressFunc = ToTronAddressFromAddress
+	ethParser.FromDescToAddressFunc = ToTronAddressFromDesc
 	return &TronParser{
 		EthereumParser: ethParser,
 	}
@@ -58,7 +60,7 @@ func (p *TronParser) GetAddrDescFromAddress(address string) (bchain.AddressDescr
 			return nil, errors.New("invalid Tron base58 address")
 		}
 		return decoded[1:21], nil
-	} else if len(address) != eth.EthereumTypeAddressDescriptorLen*2 {
+	} else if len(address) != TronTypeAddressDescriptorLen*2 {
 		return nil, bchain.ErrAddressMissing
 	}
 
@@ -67,7 +69,7 @@ func (p *TronParser) GetAddrDescFromAddress(address string) (bchain.AddressDescr
 
 // GetAddressesFromAddrDesc checks len and prefix and converts to base58
 func (p *TronParser) GetAddressesFromAddrDesc(desc bchain.AddressDescriptor) ([]string, bool, error) {
-	if len(desc) != eth.EthereumTypeAddressDescriptorLen {
+	if len(desc) != TronTypeAddressDescriptorLen {
 		return nil, false, bchain.ErrAddressMissing
 	}
 
@@ -108,6 +110,7 @@ func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
 	return len(desc) == TronTypeAddressDescriptorLen && desc[0] == 0x41
 }
 
+// todo possibly only need to transfer addresses
 func (p *TronParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error) {
 	txid := tx.Hash
 	var (
