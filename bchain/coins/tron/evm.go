@@ -37,7 +37,7 @@ func (c *TronClient) BalanceAt(ctx context.Context, addrDesc bchain.AddressDescr
 
 // NonceAt is not supported by Tron RPC
 func (c *TronClient) NonceAt(ctx context.Context, addrDesc bchain.AddressDescriptor, blockNumber *big.Int) (uint64, error) {
-	return 0, nil
+	return 1, nil
 }
 
 // TronHash wraps a transaction hash to implement the EVMHash interface
