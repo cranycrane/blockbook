@@ -1,42 +1,31 @@
 package dbtestdata
 
 import (
-	"github.com/trezor/blockbook/bchain/coins/tron"
-	"math/big"
-
 	"github.com/trezor/blockbook/bchain"
+	"github.com/trezor/blockbook/bchain/coins/tron"
 )
 
 // Addresses
 const (
-	TronAddrZero       = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb"
-	TronAddrTJ         = "TJngGWiRMLgNFScEybQxLEKQMNdB4nR6Vx" // 0x60bb513e91aa723a10a4020ae6fcce39bce7e240
-	TronAddrTX         = "TXncUDXYkRCmwhFikxYMutwAy93fbhPbbv" // 0xef51c82ea6336ba1544c4a182a7368e9fbe28274
-	TronAddrContractTR = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" // TRC20 (USDT)
-	TronAddrContractTV = "TVj7RNVHy6thbM7BWdSe9G6gXwKhjhdNZS" // TRC20 (KLV)
-	TronAddrContractTU = "TU2MJ5Veik1LRAgjeSzEdvmDYx7mefJZvd" // non TRC20
-	TronAddrContractTA = "TQEepeTijBFcWjnwF7N6THWEYpxJjpwqdd" // TRC721
-	TronAddrContractTX = "TXWLT4N9vDcmNHDnSuKv2odhBtizYuEMKJ" // TRC1155
+	TronAddrZero        = "T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb"
+	TronAddrTZ          = "TZEZWXYQS44388xBoMhQdpL1HrBZFLfDpt" // 0xff324071970b2b08822caa310c1bb458e63a5033
+	TronAddrTD          = "TDGSR64oU4QDpViKfdwawSiqwyqpUB6JUD" // 0x242aa579f130bf6fea5eac12aa6b846fb8b293ab
+	TronAddrContractTX1 = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf" // 0xeca9bc828a3005b9a3b909f2cc5c2a54794de05f
+	TronAddrContractTR  = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" // TRC20 (USDT)
+	TronAddrContractTV  = "TVj7RNVHy6thbM7BWdSe9G6gXwKhjhdNZS" // TRC20 (KLV)
+	TronAddrContractTU  = "TU2MJ5Veik1LRAgjeSzEdvmDYx7mefJZvd" // non TRC20
+	TronAddrContractTA  = "TQEepeTijBFcWjnwF7N6THWEYpxJjpwqdd" // TRC721
+	TronAddrContractTX2 = "TXWLT4N9vDcmNHDnSuKv2odhBtizYuEMKJ" // TRC1155
 
 )
 
 const (
-	// TronAddrTJ -> TronAddrTX, value 257
-	TronTx1Id     = "0xc92919ad24ffd58f760b18df7949f06e1190cf54a50a0e3745a385608ed3cbf2"
-	TronTx1Packed = "08a08d0610d0b2efa7061abf01120201a418dc69220201012a6423b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f3220c92919ad24ffd58f760b18df7949f06e1190cf54a50a0e3745a385608ed3cbf23a1460bb513e91aa723a10a4020ae6fcce39bce7e2404214ef51c82ea6336ba1544c4a182a7368e9fbe2827422060a0142120101"
+	// TRC 20
+	// TronAddrTZ -> TronAddrContractTX1
+	// TronAddrTZ -> TronAddrTD, value 11231310
+	TronTx1Id     = "0xa431984fef1d014620504d02f821f872221cf44c250a81a31e81fa4855b2b302"
+	TronTx1Packed = "08a7a5a31a10e6f4b4be061a9a011201d218ba722a44a9059cbb000000000000000000000000242aa579f130bf6fea5eac12aa6b846fb8b293ab0000000000000000000000000000000000000000000000000000000000ab604e3220a431984fef1d014620504d02f821f872221cf44c250a81a31e81fa4855b2b3023a14eca9bc828a3005b9a3b909f2cc5c2a54794de05f4214ff324071970b2b08822caa310c1bb458e63a503322a8010a02393a1201011a9e010a14eca9bc828a3005b9a3b909f2cc5c2a54794de05f12200000000000000000000000000000000000000000000000000000000000ab604e1a20ddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef1a20000000000000000000000000ff324071970b2b08822caa310c1bb458e63a50331a20000000000000000000000000242aa579f130bf6fea5eac12aa6b846fb8b293ab"
 )
-
-var TronTx1InternalData = &bchain.EthereumInternalData{
-	Transfers: []bchain.EthereumInternalTransfer{
-		{
-			Type:  bchain.CALL,
-			From:  TronAddrTX,
-			To:    TronAddrTJ,
-			Value: *big.NewInt(999999),
-		},
-	},
-	Error: "",
-}
 
 var TronBlock1SpecificData = &bchain.EthereumBlockSpecificData{
 	Contracts: []bchain.ContractInfo{
