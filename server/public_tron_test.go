@@ -32,9 +32,43 @@ func httpTestsTron(t *testing.T, ts *httptest.Server) {
 				`{"page":1,"totalPages":1,"itemsOnPage":1000,"address":"TXncUDXYkRCmwhFikxYMutwAy93fbhPbbv","balance":"123450239","unconfirmedBalance":"0","unconfirmedTxs":0,"txs":1,"nonTokenTxs":1,"transactions":[{"txid":"0xc92919ad24ffd58f760b18df7949f06e1190cf54a50a0e3745a385608ed3cbf2","vin":[{"n":0,"addresses":["TXncUDXYkRCmwhFikxYMutwAy93fbhPbbv"],"isAddress":true,"isOwn":true}],"vout":[{"value":"257","n":0,"addresses":["TJngGWiRMLgNFScEybQxLEKQMNdB4nR6Vx"],"isAddress":true}],"blockHeight":-1,"confirmations":0,"blockTime":0,"value":"257","fees":"27720","rbf":true,"coinSpecificData":{"tx":{"nonce":"0x0","gasPrice":"0x1a4","gas":"0x34dc","to":"TJngGWiRMLgNFScEybQxLEKQMNdB4nR6Vx","value":"0x101","input":"0x23b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f","hash":"0xc92919ad24ffd58f760b18df7949f06e1190cf54a50a0e3745a385608ed3cbf2","blockNumber":"0x186a0","from":"TXncUDXYkRCmwhFikxYMutwAy93fbhPbbv","transactionIndex":"0x0"},"receipt":{"gasUsed":"0x42","status":"0x1","logs":[]}},"ethereumSpecific":{"status":1,"nonce":0,"gasLimit":13532,"gasUsed":66,"gasPrice":"420","data":"0x23b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f","parsedData":{"methodId":"0x23b872dd","name":""}}}],"nonce":"239"}`,
 			},
 		},
+		{
+			name:        "apiIndex",
+			r:           newGetRequest(ts.URL + "/api"),
+			status:      http.StatusOK,
+			contentType: "application/json; charset=utf-8",
+			body: []string{
+				`{"blockbook":{"coin":"Fakecoin"`,
+				`"bestHeight":100000`,
+				`"decimals":6`,
+				`"backend":{"chain":"fakecoin","blocks":2,"headers":2,"bestBlockHash":"0x11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff"`,
+				`"version":"tron_test_1.0","subversion":"MockTron"`,
+			},
+		},
 	}
 
 	performHttpTests(tests, t, ts)
+}
+
+var websocketTestsTron = []websocketTest{
+	{
+		name: "websocket getInfo",
+		req: websocketReq{
+			Method: "getInfo",
+		},
+		want: `{"id":"0","data":{"name":"Fakecoin","shortcut":"FAKE","network":"FAKE","decimals":6,"version":"unknown","bestHeight":100000,"bestHash":"0x11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff","block0Hash":"","testnet":true,"backend":{"version":"tron_test_1.0","subversion":"MockTron"}}}`,
+	},
+	{
+		name: "websocket rpcCall",
+		req: websocketReq{
+			Method: "rpcCall",
+			Params: WsRpcCallReq{
+				To:   "0xcdA9FC258358EcaA88845f19Af595e908bb7EfE9",
+				Data: "0x4567",
+			},
+		},
+		want: `{"id":"1","data":{"data":"0x4567abcd"}}`,
+	},
 }
 
 func Test_PublicServer_Tron(t *testing.T) {
@@ -53,4 +87,5 @@ func Test_PublicServer_Tron(t *testing.T) {
 	defer ts.Close()
 
 	httpTestsTron(t, ts)
+	runWebsocketTests(t, ts, websocketTestsTron)
 }

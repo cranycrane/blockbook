@@ -15,7 +15,7 @@ const (
 	TronAddrContractTR = "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t" // TRC20 (USDT)
 	TronAddrContractTV = "TVj7RNVHy6thbM7BWdSe9G6gXwKhjhdNZS" // TRC20 (KLV)
 	TronAddrContractTU = "TU2MJ5Veik1LRAgjeSzEdvmDYx7mefJZvd" // non TRC20
-	TronAddrContractTA = "TAyrbZCme4jVBnHnALvoKbE6ewLd2VGD77" // TRC721
+	TronAddrContractTA = "TQEepeTijBFcWjnwF7N6THWEYpxJjpwqdd" // TRC721
 	TronAddrContractTX = "TXWLT4N9vDcmNHDnSuKv2odhBtizYuEMKJ" // TRC1155
 
 )

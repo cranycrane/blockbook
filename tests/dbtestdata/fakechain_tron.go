@@ -22,8 +22,8 @@ func NewFakeBlockChainTronType(parser bchain.BlockChainParser) (bchain.BlockChai
 func (c *fakeBlockChainTronType) GetChainInfo() (*bchain.ChainInfo, error) {
 	return &bchain.ChainInfo{
 		Chain:         c.GetNetworkName(),
-		Blocks:        1,
-		Headers:       1,
+		Blocks:        2,
+		Headers:       2,
 		Bestblockhash: GetTestTronBlock1(c.Parser).BlockHeader.Hash,
 		Version:       "tron_test_1.0",
 		Subversion:    "MockTron",
