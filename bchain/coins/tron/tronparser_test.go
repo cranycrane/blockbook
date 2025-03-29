@@ -145,10 +145,10 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 			expected: bchain.TokenTransfers{
 				{
 					Type:     bchain.FungibleToken,
-					Contract: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // Base58
-					From:     "TUFbWcZzvLy2LbxkxFAraojZRTB8vewjsz", // Base58
-					To:       "TNtFNW4EoQJanSczatPpU2kETN3WbVFVHR", // Base58
-					Value:    *big.NewInt(586000000),               // doplníme
+					Contract: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
+					From:     "TUFbWcZzvLy2LbxkxFAraojZRTB8vewjsz",
+					To:       "TNtFNW4EoQJanSczatPpU2kETN3WbVFVHR",
+					Value:    *big.NewInt(586000000),
 				},
 			},
 		},
