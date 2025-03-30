@@ -101,6 +101,14 @@ func ToTronAddressFromAddress(address string) string {
 	return ToTronAddressFromDesc(b)
 }
 
+func (p *TronParser) FromTronAddressToHex(addr string) string {
+	desc, err := p.GetAddrDescFromAddress(addr)
+	if err != nil {
+		return addr
+	}
+	return "0x" + hex.EncodeToString(desc)
+}
+
 // FormatAddressAlias adds .tron to a name alias
 func (p *TronParser) FormatAddressAlias(address string, name string) string {
 	return name + ".tron"
@@ -234,4 +242,28 @@ func (p *TronParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bchain.
 	}
 
 	return transfers, nil
+}
+
+func (p *TronParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]byte, error) {
+	r, ok := tx.CoinSpecificData.(bchain.EthereumSpecificData)
+	if !ok {
+		return nil, errors.New("Missing CoinSpecificData")
+	}
+	r.Tx.AccountNonce = SanitizeHexUint64String(r.Tx.AccountNonce)
+
+	r.Tx.From = p.FromTronAddressToHex(r.Tx.From)
+	r.Tx.To = p.FromTronAddressToHex(r.Tx.To)
+
+	return p.EthereumParser.PackTx(tx, height, blockTime)
+}
+
+func SanitizeHexUint64String(s string) string {
+	if strings.HasPrefix(s, "0x") {
+		sanitized := strings.TrimLeft(s[2:], "0")
+		if sanitized == "" {
+			return "0x0"
+		}
+		return "0x" + sanitized
+	}
+	return s
 }
