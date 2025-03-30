@@ -120,76 +120,7 @@ func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
 
 // todo possibly only need to transfer addresses
 func (p *TronParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error) {
-	txid := tx.Hash
-	var (
-		fa, ta []string
-		err    error
-	)
-	if len(tx.From) > 2 {
-		tx.From = ToTronAddressFromAddress(tx.From)
-		fa = []string{tx.From}
-	}
-	if len(tx.To) > 2 {
-		tx.To = ToTronAddressFromAddress(tx.To)
-		ta = []string{tx.To}
-	}
-	if receipt != nil && receipt.Logs != nil {
-		for _, l := range receipt.Logs {
-			if len(l.Address) > 2 {
-				l.Address = ToTronAddressFromAddress(l.Address)
-			}
-		}
-	}
-	if internalData != nil {
-		// ignore empty internal data
-		if internalData.Type == bchain.CALL && len(internalData.Transfers) == 0 && len(internalData.Error) == 0 {
-			internalData = nil
-		} else {
-			for i := range internalData.Transfers {
-				it := &internalData.Transfers[i]
-				it.From = ToTronAddressFromAddress(it.From)
-				it.To = ToTronAddressFromAddress(it.To)
-			}
-		}
-	}
-	ct := bchain.EthereumSpecificData{
-		Tx:           tx,
-		InternalData: internalData,
-		Receipt:      receipt,
-	}
-	vs, err := hexutil.DecodeBig(tx.Value)
-	if err != nil {
-		return nil, err
-	}
-	return &bchain.Tx{
-		Blocktime:     blocktime,
-		Confirmations: confirmations,
-		// Hex
-		// LockTime
-		Time: blocktime,
-		Txid: txid,
-		Vin: []bchain.Vin{
-			{
-				Addresses: fa,
-				// Coinbase
-				// ScriptSig
-				// Sequence
-				// Txid
-				// Vout
-			},
-		},
-		Vout: []bchain.Vout{
-			{
-				N:        0, // there is always up to one To address
-				ValueSat: *vs,
-				ScriptPubKey: bchain.ScriptPubKey{
-					// Hex
-					Addresses: ta,
-				},
-			},
-		},
-		CoinSpecificData: ct,
-	}, nil
+	return p.EthereumParser.TxToTx(tx, receipt, internalData, blocktime, confirmations, true)
 }
 
 func (p *TronParser) ParseInputData(signatures *[]bchain.FourByteSignature, data string) *bchain.EthereumParsedInputData {
