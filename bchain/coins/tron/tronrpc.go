@@ -57,6 +57,7 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 		Parser:      NewTronParser(cfg.BlockAddressesToKeep, cfg.AddressAliases),
 	}
 
+	eth.ProcessInternalTransactions = false // not possible while tron does not support the `debug_traceBlockByHash` method
 	s.EthereumRPC.Parser = s.Parser
 	s.ChainConfig = &cfg
 	s.PushHandler = pushHandler
