@@ -185,6 +185,10 @@ func (p *TronParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]by
 	r.Tx.From = p.FromTronAddressToHex(r.Tx.From)
 	r.Tx.To = p.FromTronAddressToHex(r.Tx.To)
 
+	for _, l := range r.Receipt.Logs {
+		l.Address = p.FromTronAddressToHex(l.Address)
+	}
+
 	return p.EthereumParser.PackTx(tx, height, blockTime)
 }
 
