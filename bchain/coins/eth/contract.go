@@ -336,11 +336,9 @@ func (b *EthereumRPC) fetchContractInfo(address string) (*bchain.ContractInfo, e
 
 // GetContractInfo returns information about a contract
 func (b *EthereumRPC) GetContractInfo(contractDesc bchain.AddressDescriptor) (*bchain.ContractInfo, error) {
-	address, _, err := b.Parser.GetAddressesFromAddrDesc(contractDesc)
-	if err != nil {
-		return nil, err
-	}
-	return b.fetchContractInfo(address[0])
+	address := EIP55Address(contractDesc)
+	fmt.Printf("Getting contract info for %s\n", address)
+	return b.fetchContractInfo(address)
 }
 
 // EthereumTypeGetErc20ContractBalance returns balance of ERC20 contract for given address
