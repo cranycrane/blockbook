@@ -3,7 +3,6 @@ package tron
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -223,8 +222,6 @@ func (b *TronRPC) GetMempoolTransactions() ([]string, error) {
 func (b *TronRPC) EthereumTypeGetBalance(addrDesc bchain.AddressDescriptor) (*big.Int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), b.Timeout)
 	defer cancel()
-	fmt.Printf("Original addrDesc bytes: %x\n", addrDesc)
-	fmt.Printf("Original addrDesc length: %d\n", len(addrDesc))
 
 	return b.Client.BalanceAt(ctx, addrDesc, nil)
 }
