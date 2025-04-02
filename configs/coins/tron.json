@@ -51,12 +51,13 @@
             "mempool_sub_workers": 2,
             "block_addresses_to_keep": 10000,
             "additional_params": {
-                "address_aliases": true,
-                "mempoolTxTimeoutHours": 48,
-                "queryBackendOnMempoolResync": true,
-                "fiat_rates": "coingecko",
-                "fiat_rates_vs_currencies": "USD,EUR,CNY",
-                "fourByteSignatures": ""
+              "address_aliases": true,
+              "mempoolTxTimeoutHours": 48,
+              "queryBackendOnMempoolResync": false,
+              "fiat_rates": "coingecko",
+              "fiat_rates_vs_currencies": "USD,EUR,CNY",
+              "fiat_rates_params": "{\"coin\": \"tron\",\"platformIdentifier\": \"tron\",\"platformVsCurrency\": \"trx\",\"periodSeconds\": 900}",
+              "fourByteSignatures": "https://www.4byte.directory/api/v1/signatures/"
             }
         }
     },
