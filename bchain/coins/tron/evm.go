@@ -28,13 +28,16 @@ func (c *TronClient) EstimateGas(ctx context.Context, msg interface{}) (uint64, 
 }
 
 // BalanceAt returns the balance for the given account at a specific block, or latest known block if no block number is provided
+// Only parameter 'latest' is available
 func (c *TronClient) BalanceAt(ctx context.Context, addrDesc bchain.AddressDescriptor, blockNumber *big.Int) (*big.Int, error) {
-	return c.Client.BalanceAt(ctx, common.BytesToAddress(addrDesc), blockNumber)
+	var result hexutil.Big
+	err := c.rpcClient.CallContext(ctx, &result, "eth_getBalance", common.BytesToAddress(addrDesc), "latest")
+	return (*big.Int)(&result), err
 }
 
-// NonceAt returns the nonce for the given account at a specific block, or latest known block if no block number is provided
+// NonceAt is not supported by Tron RPC
 func (c *TronClient) NonceAt(ctx context.Context, addrDesc bchain.AddressDescriptor, blockNumber *big.Int) (uint64, error) {
-	return c.Client.NonceAt(ctx, common.BytesToAddress(addrDesc), blockNumber)
+	return 1, nil
 }
 
 // TronHash wraps a transaction hash to implement the EVMHash interface
@@ -187,7 +190,7 @@ func (c *TronClient) NetworkID(ctx context.Context) (*big.Int, error) {
 	switch ver {
 	case "0x2b6653dc":
 		return big.NewInt(11111), nil
-	case "0x94a9059e":
+	case "0xcd8690dc":
 		return big.NewInt(201910292), nil
 	default:
 		return nil, fmt.Errorf("invalid net_version result %q", ver)
@@ -196,6 +199,7 @@ func (c *TronClient) NetworkID(ctx context.Context) (*big.Int, error) {
 
 // HeaderByNumber returns a block header from the current canonical chain. If number is
 // nil, the latest known header is returned.
+// overwriten so it returns TronHeader with Hash
 func (c *TronRPCClient) HeaderByNumber(ctx context.Context, number *big.Int) (*TronHeader, error) {
 	var head *TronHeader
 	err := c.CallContext(ctx, &head, "eth_getBlockByNumber", toBlockNumArg(number), false)
