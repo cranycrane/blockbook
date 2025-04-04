@@ -11,7 +11,9 @@ import (
 
 	"github.com/juju/errors"
 	"github.com/trezor/blockbook/bchain"
+	"github.com/trezor/blockbook/bchain/coins/arbitrum"
 	"github.com/trezor/blockbook/bchain/coins/avalanche"
+	"github.com/trezor/blockbook/bchain/coins/base"
 	"github.com/trezor/blockbook/bchain/coins/bch"
 	"github.com/trezor/blockbook/bchain/coins/bellcoin"
 	"github.com/trezor/blockbook/bchain/coins/bitcore"
@@ -143,6 +145,12 @@ func init() {
 	BlockChainFactories["Polygon Archive"] = polygon.NewPolygonRPC
 	BlockChainFactories["Optimism"] = optimism.NewOptimismRPC
 	BlockChainFactories["Optimism Archive"] = optimism.NewOptimismRPC
+	BlockChainFactories["Arbitrum"] = arbitrum.NewArbitrumRPC
+	BlockChainFactories["Arbitrum Archive"] = arbitrum.NewArbitrumRPC
+	BlockChainFactories["Arbitrum Nova"] = arbitrum.NewArbitrumRPC
+	BlockChainFactories["Arbitrum Nova Archive"] = arbitrum.NewArbitrumRPC
+	BlockChainFactories["Base"] = base.NewBaseRPC
+	BlockChainFactories["Base Archive"] = base.NewBaseRPC
 	BlockChainFactories["Tron"] = tron.NewTronRPC
 	BlockChainFactories["Tron Testnet Nile"] = tron.NewTronRPC
 }
@@ -321,6 +329,11 @@ func (c *blockChainWithMetrics) EthereumTypeEstimateGas(params map[string]interf
 	return c.b.EthereumTypeEstimateGas(params)
 }
 
+func (c *blockChainWithMetrics) EthereumTypeGetEip1559Fees() (v *bchain.Eip1559Fees, err error) {
+	defer func(s time.Time) { c.observeRPCLatency("EthereumTypeGetEip1559Fees", s, err) }(time.Now())
+	return c.b.EthereumTypeGetEip1559Fees()
+}
+
 func (c *blockChainWithMetrics) GetContractInfo(contractDesc bchain.AddressDescriptor) (v *bchain.ContractInfo, err error) {
 	defer func(s time.Time) { c.observeRPCLatency("GetContractInfo", s, err) }(time.Now())
 	return c.b.GetContractInfo(contractDesc)
@@ -331,7 +344,7 @@ func (c *blockChainWithMetrics) EthereumTypeGetErc20ContractBalance(addrDesc, co
 	return c.b.EthereumTypeGetErc20ContractBalance(addrDesc, contractDesc)
 }
 
-// GetContractInfo returns URI of non fungible or multi token defined by token id
+// GetTokenURI returns URI of non fungible or multi token defined by token id
 func (c *blockChainWithMetrics) GetTokenURI(contractDesc bchain.AddressDescriptor, tokenID *big.Int) (v string, err error) {
 	defer func(s time.Time) { c.observeRPCLatency("GetTokenURI", s, err) }(time.Now())
 	return c.b.GetTokenURI(contractDesc, tokenID)
@@ -350,6 +363,11 @@ func (c *blockChainWithMetrics) EthereumTypeGetStakingPoolsData(addrDesc bchain.
 func (c *blockChainWithMetrics) EthereumTypeRpcCall(data, to, from string) (v string, err error) {
 	defer func(s time.Time) { c.observeRPCLatency("EthereumTypeRpcCall", s, err) }(time.Now())
 	return c.b.EthereumTypeRpcCall(data, to, from)
+}
+
+func (c *blockChainWithMetrics) EthereumTypeGetRawTransaction(txid string) (v string, err error) {
+	defer func(s time.Time) { c.observeRPCLatency("EthereumTypeGetRawTransaction", s, err) }(time.Now())
+	return c.b.EthereumTypeGetRawTransaction(txid)
 }
 
 type mempoolWithMetrics struct {

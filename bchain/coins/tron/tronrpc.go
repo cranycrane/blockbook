@@ -19,10 +19,10 @@ const (
 	MainNet     eth.Network = 11111
 	TestNetNile eth.Network = 201910292
 
-	TRC10TokenType   bchain.TokenTypeName = "TRC10"
-	TRC20TokenType   bchain.TokenTypeName = "TRC20"
-	TRC721TokenType  bchain.TokenTypeName = "TRC721"
-	TRC1155TokenType bchain.TokenTypeName = "TRC1155"
+	TRC10TokenType   bchain.TokenStandardName = "TRC10"
+	TRC20TokenType   bchain.TokenStandardName = "TRC20"
+	TRC721TokenType  bchain.TokenStandardName = "TRC721"
+	TRC1155TokenType bchain.TokenStandardName = "TRC1155"
 )
 
 type TronConfiguration struct {
@@ -49,7 +49,7 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 		return nil, errors.Annotatef(err, "Invalid Tron configuration file")
 	}
 
-	bchain.EthereumTokenTypeMap = []bchain.TokenTypeName{TRC20TokenType, TRC721TokenType, TRC1155TokenType}
+	bchain.EthereumTokenStandardMap = []bchain.TokenStandardName{TRC20TokenType, TRC721TokenType, TRC1155TokenType}
 
 	s := &TronRPC{
 		EthereumRPC: c.(*eth.EthereumRPC),

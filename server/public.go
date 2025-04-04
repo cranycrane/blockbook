@@ -14,7 +14,6 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
-	"runtime/debug"
 	"sort"
 	"strconv"
 	"strings"
@@ -60,12 +59,12 @@ type PublicServer struct {
 	is                  *common.InternalState
 	fiatRates           *fiat.FiatRates
 	useSatsAmountFormat bool
-	enableAPIBeforeSync bool
+	isFullInterface     bool
 }
 
 // NewPublicServer creates new public server http interface to blockbook and returns its handle
 // only basic functionality is mapped, to map all functions, call
-func NewPublicServer(binding string, certFiles string, db *db.RocksDB, chain bchain.BlockChain, mempool bchain.Mempool, txCache *db.TxCache, explorerURL string, metrics *common.Metrics, is *common.InternalState, fiatRates *fiat.FiatRates, debugMode bool, enableAPIBeforeSync bool) (*PublicServer, error) {
+func NewPublicServer(binding string, certFiles string, db *db.RocksDB, chain bchain.BlockChain, mempool bchain.Mempool, txCache *db.TxCache, explorerURL string, metrics *common.Metrics, is *common.InternalState, fiatRates *fiat.FiatRates, debugMode bool) (*PublicServer, error) {
 
 	api, err := api.NewWorker(db, chain, mempool, txCache, metrics, is, fiatRates)
 	if err != nil {
@@ -110,7 +109,6 @@ func NewPublicServer(binding string, certFiles string, db *db.RocksDB, chain bch
 		is:                  is,
 		fiatRates:           fiatRates,
 		useSatsAmountFormat: chain.GetChainParser().GetChainType() == bchain.ChainBitcoinType && chain.GetChainParser().AmountDecimals() == 8,
-		enableAPIBeforeSync: enableAPIBeforeSync,
 	}
 	s.htmlTemplates.newTemplateData = s.newTemplateData
 	s.htmlTemplates.newTemplateDataWithError = s.newTemplateDataWithError
@@ -189,6 +187,7 @@ func (s *PublicServer) ConnectFullPublicInterface() {
 	serveMux.HandleFunc(path+"api/block-filters/", s.jsonHandler(s.apiBlockFilters, apiDefault))
 	serveMux.HandleFunc(path+"api/tx-specific/", s.jsonHandler(s.apiTxSpecific, apiDefault))
 	serveMux.HandleFunc(path+"api/tx/", s.jsonHandler(s.apiTx, apiDefault))
+	serveMux.HandleFunc(path+"api/rawtx/", s.jsonHandler(s.apiRawTx, apiDefault))
 	serveMux.HandleFunc(path+"api/address/", s.jsonHandler(s.apiAddress, apiDefault))
 	serveMux.HandleFunc(path+"api/xpub/", s.jsonHandler(s.apiXpub, apiDefault))
 	serveMux.HandleFunc(path+"api/utxo/", s.jsonHandler(s.apiUtxo, apiDefault))
@@ -218,6 +217,7 @@ func (s *PublicServer) ConnectFullPublicInterface() {
 	serveMux.Handle(path+"socket.io/", s.socketio.GetHandler())
 	// websocket interface
 	serveMux.Handle(path+"websocket", s.websocket.GetHandler())
+	s.isFullInterface = true
 }
 
 // Close closes the server
@@ -291,75 +291,6 @@ func getFunctionName(i interface{}) string {
 	return name
 }
 
-func (s *PublicServer) jsonHandler(handler func(r *http.Request, apiVersion int) (interface{}, error), apiVersion int) func(w http.ResponseWriter, r *http.Request) {
-	type jsonError struct {
-		Text       string `json:"error"`
-		HTTPStatus int    `json:"-"`
-	}
-
-	handlerName := getFunctionName(handler)
-	return func(w http.ResponseWriter, r *http.Request) {
-		var data interface{}
-		var err error
-
-		systemInfo, err := s.api.GetSystemInfo(false)
-		if err != nil {
-			glog.Error("Failed to get system info: ", err)
-			json.NewEncoder(w).Encode(jsonError{Text: err.Error(), HTTPStatus: http.StatusInternalServerError})
-			return
-		} else if !systemInfo.Blockbook.InSync && !s.enableAPIBeforeSync {
-			w.WriteHeader(http.StatusServiceUnavailable)
-			json.NewEncoder(w).Encode(systemInfo.Blockbook)
-			return
-		}
-
-		defer func() {
-			if e := recover(); e != nil {
-				glog.Error(handlerName, " recovered from panic: ", e)
-				debug.PrintStack()
-				if s.debug {
-					data = jsonError{fmt.Sprint("Internal server error: recovered from panic ", e), http.StatusInternalServerError}
-				} else {
-					data = jsonError{"Internal server error", http.StatusInternalServerError}
-				}
-			}
-			w.Header().Set("Content-Type", "application/json; charset=utf-8")
-			if e, isError := data.(jsonError); isError {
-				w.WriteHeader(e.HTTPStatus)
-			}
-			err = json.NewEncoder(w).Encode(data)
-			if err != nil {
-				glog.Warning("json encode ", err)
-			}
-			s.metrics.ExplorerPendingRequests.With((common.Labels{"method": handlerName})).Dec()
-		}()
-		s.metrics.ExplorerPendingRequests.With((common.Labels{"method": handlerName})).Inc()
-		data, err = handler(r, apiVersion)
-		if err != nil || data == nil {
-			if apiErr, ok := err.(*api.APIError); ok {
-				if apiErr.Public {
-					data = jsonError{apiErr.Error(), http.StatusBadRequest}
-				} else {
-					data = jsonError{apiErr.Error(), http.StatusInternalServerError}
-				}
-			} else {
-				if err != nil {
-					glog.Error(handlerName, " error: ", err)
-				}
-				if s.debug {
-					if data != nil {
-						data = jsonError{fmt.Sprintf("Internal server error: %v, data %+v", err, data), http.StatusInternalServerError}
-					} else {
-						data = jsonError{fmt.Sprintf("Internal server error: %v", err), http.StatusInternalServerError}
-					}
-				} else {
-					data = jsonError{"Internal server error", http.StatusInternalServerError}
-				}
-			}
-		}
-	}
-}
-
 func (s *PublicServer) newTemplateData(r *http.Request) *TemplateData {
 	t := &TemplateData{
 		CoinName:         s.is.Coin,
@@ -370,12 +301,12 @@ func (s *PublicServer) newTemplateData(r *http.Request) *TemplateData {
 		TOSLink:          api.Text.TOSLink,
 	}
 	if t.ChainType == bchain.ChainEthereumType {
-		t.FungibleTokenName = bchain.EthereumTokenTypeMap[bchain.FungibleToken]
-		t.NonFungibleTokenName = bchain.EthereumTokenTypeMap[bchain.NonFungibleToken]
-		t.MultiTokenName = bchain.EthereumTokenTypeMap[bchain.MultiToken]
+		t.FungibleTokenName = bchain.EthereumTokenStandardMap[bchain.FungibleToken]
+		t.NonFungibleTokenName = bchain.EthereumTokenStandardMap[bchain.NonFungibleToken]
+		t.MultiTokenName = bchain.EthereumTokenStandardMap[bchain.MultiToken]
 	}
 	if !s.debug {
-		t.Minified = ".min.3"
+		t.Minified = ".min.4"
 	}
 	if s.is.HasFiatRates {
 		// get the secondary coin and if it should be shown either from query parameters "secondary" and "use_secondary"
@@ -449,9 +380,9 @@ type TemplateData struct {
 	CoinLabel                string
 	InternalExplorer         bool
 	ChainType                bchain.ChainType
-	FungibleTokenName        bchain.TokenTypeName
-	NonFungibleTokenName     bchain.TokenTypeName
-	MultiTokenName           bchain.TokenTypeName
+	FungibleTokenName        bchain.TokenStandardName
+	NonFungibleTokenName     bchain.TokenStandardName
+	MultiTokenName           bchain.TokenStandardName
 	Address                  *api.Address
 	AddrStr                  string
 	Tx                       *api.Tx
@@ -813,10 +744,10 @@ func isOwnAddress(td *TemplateData, a string) bool {
 }
 
 // called from template, returns count of token transfers of given type in a tx
-func tokenTransfersCount(tx *api.Tx, t bchain.TokenTypeName) int {
+func tokenTransfersCount(tx *api.Tx, t bchain.TokenStandardName) int {
 	count := 0
 	for i := range tx.TokenTransfers {
-		if tx.TokenTransfers[i].Type == t {
+		if tx.TokenTransfers[i].Standard == t {
 			count++
 		}
 	}
@@ -824,10 +755,10 @@ func tokenTransfersCount(tx *api.Tx, t bchain.TokenTypeName) int {
 }
 
 // called from template, returns count of tokens in array of given type
-func tokenCount(tokens []api.Token, t bchain.TokenTypeName) int {
+func tokenCount(tokens []api.Token, t bchain.TokenStandardName) int {
 	count := 0
 	for i := range tokens {
-		if tokens[i].Type == t {
+		if tokens[i].Standard == t {
 			count++
 		}
 	}
@@ -1069,6 +1000,11 @@ func (s *PublicServer) explorerBlock(w http.ResponseWriter, r *http.Request) (tp
 }
 
 func (s *PublicServer) explorerIndex(w http.ResponseWriter, r *http.Request) (tpl, *TemplateData, error) {
+	if !s.isFullInterface && r.URL.Path != "/" {
+		w.WriteHeader(http.StatusServiceUnavailable)
+		w.Write([]byte("Service unavailable"))
+		return noTpl, nil, nil
+	}
 	var si *api.SystemInfo
 	var err error
 	s.metrics.ExplorerViews.With(common.Labels{"action": "index"}).Inc()
@@ -1213,6 +1149,9 @@ func getPagingRange(page int, total int) ([]int, int, int) {
 }
 
 func (s *PublicServer) apiIndex(r *http.Request, apiVersion int) (interface{}, error) {
+	if !s.isFullInterface && r.URL.Path != "/api/" {
+		return nil, api.NewAPIError("Service unavailable", false)
+	}
 	s.metrics.ExplorerViews.With(common.Labels{"action": "api-index"}).Inc()
 	return s.api.GetSystemInfo(false)
 }
@@ -1358,6 +1297,19 @@ func (s *PublicServer) apiTx(r *http.Request, apiVersion int) (interface{}, erro
 		return s.api.TxToV1(tx), nil
 	}
 	return tx, err
+}
+
+func (s *PublicServer) apiRawTx(r *http.Request, apiVersion int) (interface{}, error) {
+	var txid string
+	i := strings.LastIndexByte(r.URL.Path, '/')
+	if i > 0 {
+		txid = r.URL.Path[i+1:]
+	}
+	if len(txid) == 0 {
+		return "", api.NewAPIError("Missing txid", true)
+	}
+	s.metrics.ExplorerViews.With(common.Labels{"action": "api-raw-tx"}).Inc()
+	return s.api.GetRawTransaction(txid)
 }
 
 func (s *PublicServer) apiTxSpecific(r *http.Request, apiVersion int) (interface{}, error) {

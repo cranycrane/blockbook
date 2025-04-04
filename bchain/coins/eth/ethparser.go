@@ -22,7 +22,7 @@ const EthereumTypeTxidLen = 32
 // EtherAmountDecimalPoint defines number of decimal points in Ether amounts
 const EtherAmountDecimalPoint = 18
 
-type BlockChainParser interface {
+type EthereumLikeParser interface {
 	bchain.BlockChainParser
 	TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error)
 }
@@ -30,6 +30,7 @@ type BlockChainParser interface {
 // EthereumParser handle
 type EthereumParser struct {
 	*bchain.BaseParser
+	EnsSuffix             string
 	FormatAddressFunc     func(addr string) string
 	FromDescToAddressFunc func(addrDesc bchain.AddressDescriptor) string
 }
@@ -42,6 +43,7 @@ func NewEthereumParser(b int, addressAliases bool) *EthereumParser {
 			AmountDecimalPoint:   EtherAmountDecimalPoint,
 			AddressAliases:       addressAliases,
 		},
+		EnsSuffix:             ".eth",
 		FormatAddressFunc:     EIP55AddressFromAddress,
 		FromDescToAddressFunc: EIP55Address,
 	}
@@ -500,7 +502,7 @@ func (p *EthereumParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bch
 
 // FormatAddressAlias adds .eth to a name alias
 func (p *EthereumParser) FormatAddressAlias(address string, name string) string {
-	return name + ".eth"
+	return name + p.EnsSuffix
 }
 
 // TxStatus is status of transaction
