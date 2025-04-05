@@ -14,7 +14,7 @@ type fakeBlockChainTronType struct {
 
 // NewFakeBlockChainTronType
 func NewFakeBlockChainTronType(parser bchain.BlockChainParser) (bchain.BlockChain, error) {
-	bchain.EthereumTokenTypeMap = []bchain.TokenTypeName{tron.TRC20TokenType, tron.TRC721TokenType, tron.TRC1155TokenType}
+	bchain.EthereumTokenStandardMap = []bchain.TokenStandardName{tron.TRC20TokenType, tron.TRC721TokenType, tron.TRC1155TokenType}
 
 	return &fakeBlockChainTronType{
 		fakeBlockChainEthereumType: &fakeBlockChainEthereumType{&fakeBlockChain{&bchain.BaseChain{Parser: parser}}},
@@ -95,7 +95,7 @@ func (c *fakeBlockChainTronType) GetTransaction(txid string) (*bchain.Tx, error)
 func (c *fakeBlockChainTronType) GetContractInfo(contractDesc bchain.AddressDescriptor) (*bchain.ContractInfo, error) {
 	addresses, _, _ := c.Parser.GetAddressesFromAddrDesc(contractDesc)
 	return &bchain.ContractInfo{
-		Type:           tron.TRC20TokenType,
+		Standard:       tron.TRC20TokenType,
 		Contract:       addresses[0],
 		Name:           "TronTestContract" + strconv.Itoa(int(contractDesc[0])),
 		Symbol:         "TRC" + strconv.Itoa(int(contractDesc[0])),
