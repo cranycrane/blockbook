@@ -31,6 +31,7 @@ func NewTronParser(b int, addressAliases bool) *TronParser {
 	ethParser.AmountDecimalPoint = TronAmountDecimalPoint
 	ethParser.FormatAddressFunc = ToTronAddressFromAddress
 	ethParser.FromDescToAddressFunc = ToTronAddressFromDesc
+	ethParser.EnsSuffix = ".trx"
 	return &TronParser{
 		EthereumParser: ethParser,
 	}
@@ -108,11 +109,6 @@ func (p *TronParser) FromTronAddressToHex(addr string) string {
 	return "0x" + hex.EncodeToString(desc)
 }
 
-// FormatAddressAlias adds .tron to a name alias
-func (p *TronParser) FormatAddressAlias(address string, name string) string {
-	return name + ".tron"
-}
-
 func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
 	return len(desc) == TronTypeAddressDescriptorLen && desc[0] == 0x41
 }
@@ -151,19 +147,16 @@ func (p *TronParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bchain.
 
 	// Post-process the transfers to convert addresses to Tron format
 	for i, transfer := range transfers {
-		// Convert Contract address
 		if transfer.Contract != "" {
 			contract := ToTronAddressFromAddress(transfer.Contract)
 			transfers[i].Contract = contract
 		}
 
-		// Convert From address
 		if transfer.From != "" {
 			from := ToTronAddressFromAddress(transfer.From)
 			transfers[i].From = from
 		}
 
-		// Convert To address
 		if transfer.To != "" {
 			to := ToTronAddressFromAddress(transfer.To)
 			transfers[i].To = to

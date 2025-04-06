@@ -49,6 +49,8 @@ func NewTronRPC(config json.RawMessage, pushHandler func(bchain.NotificationType
 		return nil, errors.Annotatef(err, "Invalid Tron configuration file")
 	}
 
+	cfg.Eip1559Fees = false
+
 	bchain.EthereumTokenStandardMap = []bchain.TokenStandardName{TRC20TokenType, TRC721TokenType, TRC1155TokenType}
 
 	s := &TronRPC{
@@ -231,4 +233,27 @@ func (b *TronRPC) EthereumTypeGetNonce(addrDesc bchain.AddressDescriptor) (uint6
 	ctx, cancel := context.WithTimeout(context.Background(), b.Timeout)
 	defer cancel()
 	return b.Client.NonceAt(ctx, addrDesc, nil)
+}
+
+// GetContractInfo returns information about a contract
+func (b *TronRPC) GetContractInfo(contractDesc bchain.AddressDescriptor) (*bchain.ContractInfo, error) {
+	contract, err := b.EthereumRPC.GetContractInfo(contractDesc)
+	if err != nil {
+		return nil, err
+	}
+	if contract == nil {
+		return nil, nil
+	}
+	contract.Contract = ToTronAddressFromAddress(contract.Contract)
+	return contract, nil
+}
+
+// SendRawTransaction is not supported by Tron JSON-RPC
+func (b *TronRPC) SendRawTransaction(hex string) (string, error) {
+	return "", nil
+}
+
+// EthereumTypeGetRawTransaction is not supported by Tron JSON-RPC
+func (b *TronRPC) EthereumTypeGetRawTransaction(txid string) (string, error) {
+	return "", nil
 }
