@@ -192,8 +192,8 @@ func (b *TronRPC) InitializeMempool(addrDescForOutpoint bchain.AddrDescForOutpoi
 		tronTopics := bchain.SubscriptionTopics{
 			BlockSubscribe: "block",
 			BlockReceive:   "blockTrigger",
-			TxSubscribe:    "transaction",
-			TxReceive:      "transactionTrigger",
+			TxSubscribe:    "",
+			TxReceive:      "",
 		}
 
 		mq, err := bchain.NewMQ(b.ChainConfig.MessageQueueBinding, b.PushHandler, tronTopics)

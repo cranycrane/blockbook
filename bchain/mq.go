@@ -49,13 +49,15 @@ func NewMQ(binding string, callback func(NotificationType), subs SubscriptionTop
 	if err != nil {
 		return nil, err
 	}
-	err = socket.SetSubscribe(subs.BlockSubscribe)
-	if err != nil {
-		return nil, err
+	if subs.BlockSubscribe != "" {
+		if err := socket.SetSubscribe(subs.BlockSubscribe); err != nil {
+			return nil, err
+		}
 	}
-	err = socket.SetSubscribe(subs.TxSubscribe)
-	if err != nil {
-		return nil, err
+	if subs.TxSubscribe != "" {
+		if err := socket.SetSubscribe(subs.TxSubscribe); err != nil {
+			return nil, err
+		}
 	}
 	// for now do not use raw subscriptions - we would have to handle skipped/lost notifications from zeromq
 	// on each notification we do sync or syncmempool respectively
@@ -130,13 +132,17 @@ func (mq *MQ) Shutdown(ctx context.Context) error {
 	if mq.isRunning {
 		go func() {
 			// if errors in the closing sequence, let it close ungracefully
-			if err := mq.socket.SetUnsubscribe(mq.subs.BlockSubscribe); err != nil {
-				mq.finished <- err
-				return
+			if mq.subs.BlockSubscribe != "" {
+				if err := mq.socket.SetUnsubscribe(mq.subs.BlockSubscribe); err != nil {
+					mq.finished <- err
+					return
+				}
 			}
-			if err := mq.socket.SetUnsubscribe(mq.subs.TxSubscribe); err != nil {
-				mq.finished <- err
-				return
+			if mq.subs.TxSubscribe != "" {
+				if err := mq.socket.SetUnsubscribe(mq.subs.TxSubscribe); err != nil {
+					mq.finished <- err
+					return
+				}
 			}
 			if err := mq.socket.Unbind(mq.binding); err != nil {
 				mq.finished <- err
