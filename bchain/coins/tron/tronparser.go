@@ -113,11 +113,6 @@ func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
 	return len(desc) == TronTypeAddressDescriptorLen && desc[0] == 0x41
 }
 
-// todo possibly only need to transfer addresses
-func (p *TronParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error) {
-	return p.EthereumParser.TxToTx(tx, receipt, internalData, blocktime, confirmations, true)
-}
-
 func (p *TronParser) ParseInputData(signatures *[]bchain.FourByteSignature, data string) *bchain.EthereumParsedInputData {
 	parsed := p.EthereumParser.ParseInputData(signatures, data)
 
