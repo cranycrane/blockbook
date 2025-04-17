@@ -44,7 +44,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 			},
 			expected: bchain.TokenTransfers{
 				{
-					Type:     bchain.FungibleToken,
+					Standard: bchain.FungibleToken,
 					Contract: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t",
 					From:     "TUFbWcZzvLy2LbxkxFAraojZRTB8vewjsz",
 					To:       "TNtFNW4EoQJanSczatPpU2kETN3WbVFVHR",
@@ -80,7 +80,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 			},
 			expected: bchain.TokenTransfers{
 				{
-					Type:     bchain.NonFungibleToken,
+					Standard: bchain.NonFungibleToken,
 					Contract: "TAyrbZCme4jVBnHnALvoKbE6ewLd2VGD77",
 					From:     "TEkC6sH3rPjwXzXm58p9dRVVMHiz2wTcub",
 					To:       "TB9YmmXyQuhZ4dvG4T2EAzeksVme6RSvWA",
@@ -116,7 +116,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 			},
 			expected: bchain.TokenTransfers{
 				{
-					Type:     bchain.MultiToken,
+					Standard: bchain.MultiToken,
 					Contract: "TXWLT4N9vDcmNHDnSuKv2odhBtizYuEMKJ",
 					From:     "TGSRbJTwpyNtjnefQJG1ZwVF1CSDaGYGDy",
 					To:       "TMqQg2W2UEEB8cdR35AvpEfU7QbVMihiRn",
@@ -143,7 +143,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 
 			for i := range tt.expected {
 				if tt.expected[i].Contract != transfers[i].Contract ||
-					tt.expected[i].Type != transfers[i].Type ||
+					tt.expected[i].Standard != transfers[i].Standard ||
 					tt.expected[i].From != transfers[i].From ||
 					tt.expected[i].To != transfers[i].To ||
 					tt.expected[i].Value.Cmp(&transfers[i].Value) != 0 {
@@ -177,11 +177,11 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromTx(t *testing.T) {
 			},
 			expected: bchain.TokenTransfers{
 				{
-					Type:     bchain.FungibleToken,
+					Standard: bchain.FungibleToken,
 					Contract: "TR7NHqjeKQxGTCi8q8ZY4pL8otSzgjLj6t", // Base58
 					From:     "TUFbWcZzvLy2LbxkxFAraojZRTB8vewjsz", // Base58
 					To:       "TNtFNW4EoQJanSczatPpU2kETN3WbVFVHR", // Base58
-					Value:    *big.NewInt(586000000),               // doplníme
+					Value:    *big.NewInt(586000000),
 				},
 			},
 		},
@@ -199,7 +199,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromTx(t *testing.T) {
 			},
 			expected: bchain.TokenTransfers{
 				{
-					Type:     bchain.NonFungibleToken,
+					Standard: bchain.NonFungibleToken,
 					Contract: "TAyrbZCme4jVBnHnALvoKbE6ewLd2VGD77",
 					From:     "TEkC6sH3rPjwXzXm58p9dRVVMHiz2wTcub",
 					To:       "TB9YmmXyQuhZ4dvG4T2EAzeksVme6RSvWA",
@@ -221,7 +221,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromTx(t *testing.T) {
 
 			for i := range tt.expected {
 				if tt.expected[i].Contract != transfers[i].Contract ||
-					tt.expected[i].Type != transfers[i].Type ||
+					tt.expected[i].Standard != transfers[i].Standard ||
 					tt.expected[i].From != transfers[i].From ||
 					tt.expected[i].To != transfers[i].To ||
 					tt.expected[i].Value.Cmp(&transfers[i].Value) != 0 {
