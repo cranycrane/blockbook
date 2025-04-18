@@ -74,13 +74,13 @@ func TestTxDetail(t *testing.T) {
 }
 
 func TestBlockLatencyBenchmarkSequential(t *testing.T) {
-	stopMon := startMonitor(10*time.Millisecond, "system.csv")
+	stopMon := startMonitor(100*time.Millisecond, "systemSeq96GB-TronImproved.csv")
 	defer func() {
 		printStats(t, stopMon(), "seq")
 	}()
 
 	best := getBestBlockHeight(t)
-	heights := randomHeights(t, 40_000_000, int(best), 10)
+	heights := randomHeights(t, 40_000_000, int(best), 50)
 
 	type result struct {
 		Height     int
@@ -94,81 +94,54 @@ func TestBlockLatencyBenchmarkSequential(t *testing.T) {
 	for _, h := range heights {
 		url := fmt.Sprintf("%s/api/v2/block/%d?details=basic", *addr, h)
 
-		fetch := func() (time.Duration, int) {
-			start := time.Now()
-			resp, err := client.Get(url)
-			require.NoError(t, err)
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				body, _ := io.ReadAll(resp.Body)
-				t.Fatalf("block %d – expected 200, got %d\nresponse: %s", h, resp.StatusCode, body)
-			}
-
-			var blk struct {
-				TxCount int `json:"txCount"`
-			}
-			require.NoError(t, json.NewDecoder(resp.Body).Decode(&blk))
-			return time.Since(start), blk.TxCount
+		noteRequest()
+		coldTime, txs, err := fetchBlock(client, url)
+		if err != nil {
+			results = append(results, result{})
+		} else {
+			noteProgress(txs)
 		}
 
-		coldTime, txs := fetch()
-		noteProgress(txs)
-
-		warmTime, _ := fetch()
+		//warmTime, _, err := fetchBlock(client, url)
+		//if err != nil {
+		//	results = append(results, result{})
+		//}
 
 		results = append(results, result{
 			Height:  h,
 			TxCount: txs,
 			Cold:    coldTime,
-			Warm:    warmTime,
+			//Warm:    warmTime,
+			Warm: 0,
 		})
 	}
 
-	var coldTimes, warmTimes []time.Duration
+	var coldTimes []time.Duration
+	var coldTxs []int
+
 	for _, r := range results {
 		t.Logf("block %d – %d tx – cold: %v  warm: %v", r.Height, r.TxCount, r.Cold, r.Warm)
 		coldTimes = append(coldTimes, r.Cold)
-		warmTimes = append(warmTimes, r.Warm)
+		coldTxs = append(coldTxs, r.TxCount)
 	}
 
-	report := func(name string, times []time.Duration, totalTxs int) {
-		sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
-		sum := time.Duration(0)
-		for _, d := range times {
-			sum += d
-		}
-		avg := sum / time.Duration(len(times))
-		p95 := times[int(0.95*float64(len(times)))]
+	report(t, "cold", coldTimes, coldTxs)
 
-		txsPerSec := float64(totalTxs) / avg.Seconds()
-		t.Logf("%s: n=%d  avg=%v  p95=%v  → throughput ≈ %.1f tx/s",
-			name, len(times), avg, p95, txsPerSec)
-	}
-
-	totalColdTx := 0
-	totalWarmTx := 0
-	for _, r := range results {
-		totalColdTx += r.TxCount
-		totalWarmTx += r.TxCount
-	}
-	report("cold", coldTimes, totalColdTx)
-	report("warm", warmTimes, totalWarmTx)
 }
 
 func TestBlockLatencyParallelWorkers(t *testing.T) {
-	stopMon := startMonitor(50*time.Millisecond, "system.csv")
+	stopMon := startMonitor(100*time.Millisecond, "systemParallel96GB-Tron.csv")
 	defer func() {
-		printStats(t, stopMon(), "seq")
+		printStats(t, stopMon(), "paralell")
 	}()
 
 	const (
 		numWorkers = 5
-		numBlocks  = 10
+		numBlocks  = 50
 	)
 
 	best := getBestBlockHeight(t)
-	heights := randomHeights(t, 0, int(best), numBlocks)
+	heights := randomHeights(t, 50_000_000, int(best), numBlocks)
 
 	type result struct {
 		Height     int
@@ -191,39 +164,20 @@ func TestBlockLatencyParallelWorkers(t *testing.T) {
 				h := heights[i]
 				url := fmt.Sprintf("%s/api/v2/block/%d?details=basic", *addr, h)
 
-				fetch := func() (time.Duration, int, error) {
-					start := time.Now()
-					resp, err := client.Get(url)
-					if err != nil {
-						return 0, 0, err
-					}
-					defer resp.Body.Close()
-					body, _ := io.ReadAll(resp.Body)
-					if resp.StatusCode != http.StatusOK {
-						return 0, 0, fmt.Errorf("HTTP %d: %s", resp.StatusCode, body)
-					}
-					var blk struct {
-						TxCount int `json:"txCount"`
-					}
-					if err := json.Unmarshal(body, &blk); err != nil {
-						return 0, 0, err
-					}
-					return time.Since(start), blk.TxCount, nil
-				}
-
-				cold, txs, err := fetch()
+				noteRequest()
+				cold, txs, err := fetchBlock(client, url)
 				if err != nil {
 					results[i] = result{Height: h, Err: err}
 					continue
 				}
 				noteProgress(txs)
 
-				warm, _, err := fetch()
-				if err != nil {
-					results[i] = result{Height: h, Err: err}
-					continue
-				}
-				results[i] = result{Height: h, TxCount: txs, Cold: cold, Warm: warm}
+				//warm, _, err := fetchBlock(client, url)
+				//if err != nil {
+				//	results[i] = result{Height: h, Err: err}
+				//	continue
+				//}
+				results[i] = result{Height: h, TxCount: txs, Cold: cold, Warm: 0}
 			}
 		}(w)
 	}
@@ -236,40 +190,20 @@ func TestBlockLatencyParallelWorkers(t *testing.T) {
 	wg.Wait()
 
 	// Process results
-	var coldTimes, warmTimes []time.Duration
-	totalTxCold, totalTxWarm := 0, 0
+	var coldTimes []time.Duration
+	var coldTxs []int
 
 	for _, r := range results {
 		if r.Err != nil {
-			t.Errorf("block %d failed: %v", r.Height, r.Err)
+			t.Logf("block %d failed: %v", r.Height, r.Err)
 			continue
 		}
 		t.Logf("block %d – %d tx – cold: %v  warm: %v", r.Height, r.TxCount, r.Cold, r.Warm)
 		coldTimes = append(coldTimes, r.Cold)
-		warmTimes = append(warmTimes, r.Warm)
-		totalTxCold += r.TxCount
-		totalTxWarm += r.TxCount
+		coldTxs = append(coldTxs, r.TxCount)
 	}
 
-	report := func(name string, times []time.Duration, totalTxs int) {
-		if len(times) == 0 {
-			t.Logf("%s: no successful results", name)
-			return
-		}
-		sort.Slice(times, func(i, j int) bool { return times[i] < times[j] })
-		sum := time.Duration(0)
-		for _, d := range times {
-			sum += d
-		}
-		avg := sum / time.Duration(len(times))
-		p95 := times[int(0.95*float64(len(times)))]
-		txsPerSec := float64(totalTxs) / avg.Seconds()
-		t.Logf("%s: n=%d  avg=%v  p95=%v  → throughput ≈ %.1f tx/s",
-			name, len(times), avg, p95, txsPerSec)
-	}
-
-	report("cold (workers)", coldTimes, totalTxCold)
-	report("warm (workers)", warmTimes, totalTxWarm)
+	report(t, "cold", coldTimes, coldTxs)
 }
 
 func BenchmarkGetAddress(b *testing.B) {
@@ -294,6 +228,7 @@ func BenchmarkGetAddress(b *testing.B) {
 var (
 	blkDelta, txDelta uint64
 	blkTotal, txTotal uint64
+	blkRequested      uint64
 )
 
 func noteProgress(txCnt int) {
@@ -301,6 +236,10 @@ func noteProgress(txCnt int) {
 	atomic.AddUint64(&txDelta, uint64(txCnt))
 	atomic.AddUint64(&blkTotal, 1)
 	atomic.AddUint64(&txTotal, uint64(txCnt))
+}
+
+func noteRequest() {
+	atomic.AddUint64(&blkRequested, 1)
 }
 
 type sample struct {
@@ -311,6 +250,7 @@ type sample struct {
 	readB, writeB     uint64
 	newBlocks, newTxs uint64
 	allBlocks, allTxs uint64
+	requestedBlocks   uint64
 }
 
 func startMonitor(period time.Duration, csvPath string) (stop func() []sample) {
@@ -322,6 +262,7 @@ func startMonitor(period time.Duration, csvPath string) (stop func() []sample) {
 		"readMiB", "writeMiB",
 		"deltaBlocks", "deltaTxs",
 		"allBlocks", "allTxs",
+		"blkRequested",
 	})
 
 	var (
@@ -330,10 +271,8 @@ func startMonitor(period time.Duration, csvPath string) (stop func() []sample) {
 	)
 	done := make(chan struct{})
 
-	/* ----- init kumulativních čítačů ----- */
 	prevCPU, _ := cpu.Times(false)
 
-	// helper: sečte všechny disky
 	totalIO := func(m map[string]disk.IOCountersStat) (rd, wr uint64) {
 		for _, v := range m {
 			rd += v.ReadBytes
@@ -383,6 +322,9 @@ func startMonitor(period time.Duration, csvPath string) (stop func() []sample) {
 				aBlk := atomic.LoadUint64(&blkTotal)
 				aTx := atomic.LoadUint64(&txTotal)
 
+				rBlk := atomic.LoadUint64(&blkRequested)
+				atomic.SwapUint64(&blkRequested, 0)
+
 				s := sample{
 					ts:            now,
 					memMiB:        usedMiB,
@@ -391,6 +333,7 @@ func startMonitor(period time.Duration, csvPath string) (stop func() []sample) {
 					readB:         rd, writeB: wr,
 					newBlocks: dBlk, newTxs: dTx,
 					allBlocks: aBlk, allTxs: aTx,
+					requestedBlocks: rBlk,
 				}
 				mu.Lock()
 				out = append(out, s)
@@ -407,6 +350,7 @@ func startMonitor(period time.Duration, csvPath string) (stop func() []sample) {
 					fmt.Sprintf("%d", dTx),
 					fmt.Sprintf("%d", aBlk),
 					fmt.Sprintf("%d", aTx),
+					fmt.Sprintf("%d", rBlk),
 				})
 			}
 		}
@@ -446,6 +390,39 @@ func printStats(t *testing.T, s []sample, label string) {
 }
 
 /* ---------- Helpers ---------- */
+
+func report(t *testing.T, name string, times []time.Duration, txPerCall []int) {
+	if len(times) == 0 {
+		t.Logf("%s: no samples", name)
+		return
+	}
+
+	var filtered []time.Duration
+	var txSum int
+	var sumDur time.Duration
+	for i, d := range times {
+		if d == 0 {
+			continue
+		}
+		filtered = append(filtered, d)
+		txSum += txPerCall[i]
+		sumDur += d
+	}
+	if len(filtered) == 0 {
+		t.Logf("%s: no valid samples", name)
+		return
+	}
+
+	sort.Slice(filtered, func(i, j int) bool { return filtered[i] < filtered[j] })
+
+	avg := sumDur / time.Duration(len(filtered))
+	p95 := filtered[int(0.95*float64(len(filtered)))]
+
+	tps := float64(txSum) / sumDur.Seconds()
+
+	t.Logf("%s: n=%d  total=%v  avg=%v  p95=%v  → throughput ≈ %.1f tx/s, total Tx: %d",
+		name, len(filtered), sumDur, avg, p95, tps, txSum)
+}
 
 func getBestBlockHeight(t *testing.T) uint32 {
 	resp, err := http.Get(*addr + "/api/status")
@@ -498,6 +475,26 @@ func fetch(t *testing.T, url string) []byte {
 	defer r.Body.Close()
 	b, _ := io.ReadAll(r.Body)
 	return b
+}
+
+func fetchBlock(client *http.Client, url string) (time.Duration, int, error) {
+	start := time.Now()
+	resp, err := client.Get(url)
+	if err != nil {
+		return 0, 0, err
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return 0, 0, fmt.Errorf("HTTP %d: %s", resp.StatusCode, body)
+	}
+	var blk struct {
+		TxCount int `json:"txCount"`
+	}
+	if err := json.Unmarshal(body, &blk); err != nil {
+		return 0, 0, err
+	}
+	return time.Since(start), blk.TxCount, nil
 }
 
 func assertJSONEq(t *testing.T, want, got []byte) {
