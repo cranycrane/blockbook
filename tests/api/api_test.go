@@ -3,7 +3,6 @@
 package api
 
 import (
-	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"flag"
@@ -14,14 +13,15 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 	"sync"
-	"sync/atomic" //  ← přidat
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/shirou/gopsutil/v3/cpu"
-	"github.com/shirou/gopsutil/v3/disk" //  ← přidat
-	"github.com/shirou/gopsutil/v3/mem"  //  ← přidat
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/mem"
 	"github.com/stretchr/testify/require"
 )
 
@@ -66,21 +66,53 @@ func TestStatus(t *testing.T) {
 }
 
 func TestTxDetail(t *testing.T) {
-	txid := "0x0b6434f268778fdac9d63dac167fb65082b11750d06c13769f0f03aa021f6a91"
-	want := fixture(t, filepath.Join("tx", txid+".json"))
+	dir := filepath.Join("testdata", *coinName, "tx")
+	files, err := os.ReadDir(dir)
+	require.NoError(t, err)
 
-	got := fetch(t, *addr+"/api/v2/tx/"+txid)
-	assertJSONEq(t, want, got)
+	for _, f := range files {
+		if f.IsDir() || filepath.Ext(f.Name()) != ".json" {
+			continue
+		}
+		txid := strings.TrimSuffix(f.Name(), ".json")
+		t.Run(txid, func(t *testing.T) {
+			want := fixture(t, filepath.Join("tx", f.Name()))
+			got := fetch(t, fmt.Sprintf("%s/api/v2/tx/%s", *addr, txid))
+			assertJSONEq(t, want, got)
+		})
+	}
+}
+
+func TestBlockDetail(t *testing.T) {
+	dir := filepath.Join("testdata", *coinName, "block")
+	files, err := os.ReadDir(dir)
+	require.NoError(t, err)
+
+	for _, f := range files {
+		if f.IsDir() || filepath.Ext(f.Name()) != ".json" {
+			continue
+		}
+		blockHash := strings.TrimSuffix(f.Name(), ".json")
+		t.Run(blockHash, func(t *testing.T) {
+			want := fixture(t, filepath.Join("block", f.Name()))
+			got := fetch(t, fmt.Sprintf("%s/api/v2/block/%s", *addr, blockHash))
+			assertJSONEq(t, want, got)
+		})
+	}
 }
 
 func TestBlockLatencyBenchmarkSequential(t *testing.T) {
-	stopMon := startMonitor(100*time.Millisecond, "systemSeq96GB-TronImproved.csv")
+	stopMon := startMonitor(100*time.Millisecond, "systemSeq96GBParWorker-Tron.csv")
 	defer func() {
 		printStats(t, stopMon(), "seq")
 	}()
 
-	best := getBestBlockHeight(t)
-	heights := randomHeights(t, 40_000_000, int(best), 50)
+	//best := getBestBlockHeight(t)
+	//heights := randomHeights(t, 40_000_000, int(best), 50)
+	heights := make([]int, 0, 51)
+	for h := 65_000_000; h <= 65_000_049; h++ {
+		heights = append(heights, h)
+	}
 
 	type result struct {
 		Height     int
@@ -92,7 +124,7 @@ func TestBlockLatencyBenchmarkSequential(t *testing.T) {
 	client := &http.Client{Timeout: 10 * time.Second}
 
 	for _, h := range heights {
-		url := fmt.Sprintf("%s/api/v2/block/%d?details=basic", *addr, h)
+		url := fmt.Sprintf("%s/api/v2/block/%d", *addr, h)
 
 		noteRequest()
 		coldTime, txs, err := fetchBlock(client, url)
@@ -118,30 +150,35 @@ func TestBlockLatencyBenchmarkSequential(t *testing.T) {
 
 	var coldTimes []time.Duration
 	var coldTxs []int
+	var totalDuration time.Duration
 
 	for _, r := range results {
 		t.Logf("block %d – %d tx – cold: %v  warm: %v", r.Height, r.TxCount, r.Cold, r.Warm)
 		coldTimes = append(coldTimes, r.Cold)
 		coldTxs = append(coldTxs, r.TxCount)
+		totalDuration += r.Cold
 	}
 
-	report(t, "cold", coldTimes, coldTxs)
-
+	report(t, "cold", coldTimes, coldTxs, totalDuration)
 }
 
 func TestBlockLatencyParallelWorkers(t *testing.T) {
-	stopMon := startMonitor(100*time.Millisecond, "systemParallel96GB-Tron.csv")
+	stopMon := startMonitor(100*time.Millisecond, "systemParallel96GBParWorker-Tron.csv")
 	defer func() {
 		printStats(t, stopMon(), "paralell")
 	}()
 
 	const (
-		numWorkers = 5
+		numWorkers = 15
 		numBlocks  = 50
 	)
 
-	best := getBestBlockHeight(t)
-	heights := randomHeights(t, 50_000_000, int(best), numBlocks)
+	//best := getBestBlockHeight(t)
+	//heights := randomHeights(t, 50_000_000, int(best), numBlocks)
+	heights := make([]int, 0, 51)
+	for h := 65_000_000; h <= 65_000_050; h++ {
+		heights = append(heights, h)
+	}
 
 	type result struct {
 		Height     int
@@ -155,6 +192,9 @@ func TestBlockLatencyParallelWorkers(t *testing.T) {
 	jobChan := make(chan int, numBlocks)
 	wg := sync.WaitGroup{}
 	wg.Add(numWorkers)
+
+	// start timer
+	start := time.Now()
 
 	// Start worker pool
 	for w := 0; w < numWorkers; w++ {
@@ -189,6 +229,9 @@ func TestBlockLatencyParallelWorkers(t *testing.T) {
 	close(jobChan)
 	wg.Wait()
 
+	// end timer
+	total := time.Since(start)
+
 	// Process results
 	var coldTimes []time.Duration
 	var coldTxs []int
@@ -203,7 +246,7 @@ func TestBlockLatencyParallelWorkers(t *testing.T) {
 		coldTxs = append(coldTxs, r.TxCount)
 	}
 
-	report(t, "cold", coldTimes, coldTxs)
+	report(t, "cold", coldTimes, coldTxs, total)
 }
 
 func BenchmarkGetAddress(b *testing.B) {
@@ -369,7 +412,12 @@ func printStats(t *testing.T, s []sample, label string) {
 		t.Logf("%s: no samples", label)
 		return
 	}
-	var peakMem, peakCPU, peakWait float64
+
+	var (
+		peakMem, peakCPU, peakWait float64
+		sumCPU, sumWait            float64
+	)
+
 	for _, v := range s {
 		if v.memMiB > peakMem {
 			peakMem = v.memMiB
@@ -380,18 +428,33 @@ func printStats(t *testing.T, s []sample, label string) {
 		if v.iowaitPercent > peakWait {
 			peakWait = v.iowaitPercent
 		}
+		sumCPU += v.cpuPercent
+		sumWait += v.iowaitPercent
 	}
-	readMB := float64(s[len(s)-1].readB-s[0].readB) / 1048576
-	writeMB := float64(s[len(s)-1].writeB-s[0].writeB) / 1048576
+
+	avgCPU := sumCPU / float64(len(s))
+	avgWait := sumWait / float64(len(s))
+
+	readMB := float64(s[len(s)-1].readB-s[0].readB) / 1024 / 1024
+	writeMB := float64(s[len(s)-1].writeB-s[0].writeB) / 1024 / 1024
 	dur := s[len(s)-1].ts.Sub(s[0].ts).Seconds()
 
-	t.Logf("%s – runtime %.1fs  peakRAM %.1f MiB  peakCPU %.1f%%  peakIOwait %.1f%%  read %.1f MiB  write %.1f MiB",
-		label, dur, peakMem, peakCPU, peakWait, readMB, writeMB)
+	t.Logf("%s – runtime %.1fs  peakRAM %.1f MiB  peakCPU %.1f%%  avgCPU %.1f%%  peakIOwait %.1f%%  avgIOwait %.1f%%  read %.1f MiB  write %.1f MiB",
+		label,
+		dur,
+		peakMem,
+		peakCPU,
+		avgCPU,
+		peakWait,
+		avgWait,
+		readMB,
+		writeMB,
+	)
 }
 
 /* ---------- Helpers ---------- */
 
-func report(t *testing.T, name string, times []time.Duration, txPerCall []int) {
+func report(t *testing.T, name string, times []time.Duration, txPerCall []int, totalDuration time.Duration) {
 	if len(times) == 0 {
 		t.Logf("%s: no samples", name)
 		return
@@ -418,10 +481,10 @@ func report(t *testing.T, name string, times []time.Duration, txPerCall []int) {
 	avg := sumDur / time.Duration(len(filtered))
 	p95 := filtered[int(0.95*float64(len(filtered)))]
 
-	tps := float64(txSum) / sumDur.Seconds()
+	tps := float64(txSum) / totalDuration.Seconds()
 
 	t.Logf("%s: n=%d  total=%v  avg=%v  p95=%v  → throughput ≈ %.1f tx/s, total Tx: %d",
-		name, len(filtered), sumDur, avg, p95, tps, txSum)
+		name, len(filtered), totalDuration, avg, p95, tps, txSum)
 }
 
 func getBestBlockHeight(t *testing.T) uint32 {
@@ -497,15 +560,46 @@ func fetchBlock(client *http.Client, url string) (time.Duration, int, error) {
 	return time.Since(start), blk.TxCount, nil
 }
 
-func assertJSONEq(t *testing.T, want, got []byte) {
+func assertJSONEq(t *testing.T, wantJSON, gotJSON []byte) {
 	t.Helper()
-	var jw, jg interface{}
-	require.NoError(t, json.Unmarshal(rewrite(want), &jw))
-	require.NoError(t, json.Unmarshal(rewrite(got), &jg))
-	require.Equal(t, jw, jg)
+
+	var want, got interface{}
+	require.NoError(t, json.Unmarshal(wantJSON, &want))
+	require.NoError(t, json.Unmarshal(gotJSON, &got))
+
+	filterByIgnore(&want, &got)
+
+	require.Equal(t, want, got)
 }
 
-func rewrite(in []byte) []byte {
-	in = bytes.ReplaceAll(in, []byte(`"IGNORE"`), []byte(`null`))
-	return in
+func filterByIgnore(want, got *interface{}) {
+	switch w := (*want).(type) {
+	case map[string]interface{}:
+		g, ok := (*got).(map[string]interface{})
+		if !ok {
+			return
+		}
+		for k, v := range w {
+			if str, ok := v.(string); ok && str == "IGNORE" {
+				delete(w, k)
+				delete(g, k)
+				continue
+			}
+			wChild, gChild := v, g[k]
+			filterByIgnore(&wChild, &gChild)
+			w[k] = wChild
+			g[k] = gChild
+		}
+	case []interface{}:
+		g, ok := (*got).([]interface{})
+		if !ok {
+			return
+		}
+		for i := range w {
+			if i >= len(g) {
+				break
+			}
+			filterByIgnore(&w[i], &g[i])
+		}
+	}
 }
