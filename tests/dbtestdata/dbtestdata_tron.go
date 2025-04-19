@@ -16,7 +16,12 @@ const (
 	TronAddrContractTU  = "TU2MJ5Veik1LRAgjeSzEdvmDYx7mefJZvd" // non TRC20
 	TronAddrContractTA  = "TQEepeTijBFcWjnwF7N6THWEYpxJjpwqdd" // TRC721
 	TronAddrContractTX2 = "TXWLT4N9vDcmNHDnSuKv2odhBtizYuEMKJ" // TRC1155
+)
 
+// Blocks
+const (
+	Block0 = 99999
+	Block1 = 100000
 )
 
 const (
@@ -35,7 +40,7 @@ var TronBlock1SpecificData = &bchain.EthereumBlockSpecificData{
 			Name:           "USD Token",
 			Symbol:         "USDT",
 			Decimals:       12,
-			CreatedInBlock: 99999,
+			CreatedInBlock: Block0,
 		},
 	},
 }
@@ -43,7 +48,7 @@ var TronBlock1SpecificData = &bchain.EthereumBlockSpecificData{
 func GetTestTronBlock0(parser bchain.BlockChainParser) *bchain.Block {
 	return &bchain.Block{
 		BlockHeader: bchain.BlockHeader{
-			Height:        99999,
+			Height:        Block0,
 			Hash:          "0x0000000000000000000000000000000000000000000000000000000000000000",
 			Time:          1694226700,
 			Confirmations: 2,
@@ -55,7 +60,7 @@ func GetTestTronBlock0(parser bchain.BlockChainParser) *bchain.Block {
 func GetTestTronBlock1(parser bchain.BlockChainParser) *bchain.Block {
 	return &bchain.Block{
 		BlockHeader: bchain.BlockHeader{
-			Height:        100000,
+			Height:        Block1,
 			Hash:          "0x11223344556677889900aabbccddeeff11223344556677889900aabbccddeeff",
 			Size:          12345,
 			Time:          1677700000,
