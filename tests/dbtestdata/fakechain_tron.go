@@ -1,7 +1,6 @@
 package dbtestdata
 
 import (
-	"github.com/trezor/blockbook/bchain/coins/tron"
 	"strconv"
 
 	"github.com/trezor/blockbook/bchain"
@@ -12,9 +11,16 @@ type fakeBlockChainTronType struct {
 	*fakeBlockChainEthereumType
 }
 
+// redefine token-standards to avoid circular dependency when importing "tron" package
+const (
+	TRC20TokenType   bchain.TokenStandardName = "TRC20"
+	TRC721TokenType  bchain.TokenStandardName = "TRC721"
+	TRC1155TokenType bchain.TokenStandardName = "TRC1155"
+)
+
 // NewFakeBlockChainTronType
 func NewFakeBlockChainTronType(parser bchain.BlockChainParser) (bchain.BlockChain, error) {
-	bchain.EthereumTokenStandardMap = []bchain.TokenStandardName{tron.TRC20TokenType, tron.TRC721TokenType, tron.TRC1155TokenType}
+	bchain.EthereumTokenStandardMap = []bchain.TokenStandardName{TRC20TokenType, TRC721TokenType, TRC1155TokenType}
 
 	return &fakeBlockChainTronType{
 		fakeBlockChainEthereumType: &fakeBlockChainEthereumType{&fakeBlockChain{&bchain.BaseChain{Parser: parser}}},
@@ -95,7 +101,7 @@ func (c *fakeBlockChainTronType) GetTransaction(txid string) (*bchain.Tx, error)
 func (c *fakeBlockChainTronType) GetContractInfo(contractDesc bchain.AddressDescriptor) (*bchain.ContractInfo, error) {
 	addresses, _, _ := c.Parser.GetAddressesFromAddrDesc(contractDesc)
 	return &bchain.ContractInfo{
-		Standard:       tron.TRC20TokenType,
+		Standard:       TRC20TokenType,
 		Contract:       addresses[0],
 		Name:           "TronTestContract" + strconv.Itoa(int(contractDesc[0])),
 		Symbol:         "TRC" + strconv.Itoa(int(contractDesc[0])),

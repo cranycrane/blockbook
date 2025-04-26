@@ -2,7 +2,6 @@ package dbtestdata
 
 import (
 	"github.com/trezor/blockbook/bchain"
-	"github.com/trezor/blockbook/bchain/coins/tron"
 )
 
 // Addresses
@@ -31,7 +30,7 @@ var TronBlock1SpecificData = &bchain.EthereumBlockSpecificData{
 	Contracts: []bchain.ContractInfo{
 		{
 			Contract:       TronAddrContractTR,
-			Type:           tron.TRC20TokenType,
+			Type:           TRC20TokenType,
 			Name:           "USD Token",
 			Symbol:         "USDT",
 			Decimals:       12,
