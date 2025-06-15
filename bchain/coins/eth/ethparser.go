@@ -24,7 +24,7 @@ const EtherAmountDecimalPoint = 18
 
 type EthereumLikeParser interface {
 	bchain.BlockChainParser
-	TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error)
+	txToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error)
 }
 
 // EthereumParser handle
@@ -79,7 +79,7 @@ func ethNumber(n string) (int64, error) {
 	return 0, errors.Errorf("Not a number: '%v'", n)
 }
 
-func (p *EthereumParser) TxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error) {
+func (p *EthereumParser) txToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error) {
 	txid := tx.Hash
 	var (
 		fa, ta []string
@@ -424,7 +424,7 @@ func (p *EthereumParser) UnpackTx(buf []byte) (*bchain.Tx, uint32, error) {
 		}
 	}
 	// TODO handle internal transactions
-	tx, err := p.TxToTx(&rt, rr, nil, int64(pt.BlockTime), 0, false)
+	tx, err := p.txToTx(&rt, rr, nil, int64(pt.BlockTime), 0, false)
 	if err != nil {
 		return nil, 0, err
 	}
