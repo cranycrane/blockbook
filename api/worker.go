@@ -190,7 +190,15 @@ func (w *Worker) getAddressAliases(addresses map[string]struct{}) AddressAliases
 			if len(n) > 0 {
 				aliases[a] = AddressAlias{Type: t, Alias: n}
 			}
+
+			addrDesc, err := w.chainParser.GetAddrDescFromAddress(a)
+			if err == nil && addrDesc != nil {
+				if attrib, err := w.db.GetAddressAttribution(addrDesc); err == nil && len(attrib) > 0 {
+					aliases[a] = AddressAlias{Type: "Attribution", Alias: attrib}
+				}
+			}
 		}
+
 		return aliases
 	}
 	return nil
