@@ -45,7 +45,6 @@ type TronHash struct {
 	common.Hash
 }
 
-// todo - tron does not support subscriptions on json-rpc
 type TronClientSubscription struct {
 	*rpc.ClientSubscription
 }
@@ -155,7 +154,6 @@ type TronRPCClient struct {
 }
 
 // EthSubscribe subscribes to events and returns a client subscription that implements the EVMClientSubscription interface
-// todo subscription not supported in tron rpc
 func (c *TronRPCClient) EthSubscribe(ctx context.Context, channel interface{}, args ...interface{}) (bchain.EVMClientSubscription, error) {
 	sub, err := c.Client.EthSubscribe(ctx, channel, args...)
 	if err != nil {
