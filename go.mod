@@ -23,7 +23,6 @@ require (
 	github.com/martinboehm/btcd v0.0.0-20221101112928-408689e15809
 	github.com/martinboehm/btcutil v0.0.0-20211010173611-6ef1889c1819
 	github.com/martinboehm/golang-socketio v0.0.0-20180414165752-f60b0a8befde
-	github.com/mr-tron/base58 v1.2.0
 	github.com/pebbe/zmq4 v1.2.1
 	github.com/pirk/ecashaddr-converter v0.0.0-20220121162910-c6cb45163b29
 	github.com/pirk/ecashutil v0.0.0-20220124103933-d37f548d249e
@@ -71,6 +70,7 @@ require (
 	github.com/kkdai/bstream v0.0.0-20171226095907-f71540b9dfdc // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.4 // indirect
 	github.com/mmcloughlin/addchain v0.4.0 // indirect
+	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
