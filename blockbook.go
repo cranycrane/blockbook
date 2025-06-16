@@ -330,9 +330,13 @@ func mainWithExitCode() int {
 	}
 	go storeInternalStateLoop()
 
-	if publicServer != nil && !*enableAPIBeforeSyncFlag {
+	if publicServer != nil {
 		// start full public interface
-		startFullPublicInterface(publicServer)
+		callbacksOnNewBlock = append(callbacksOnNewBlock, publicServer.OnNewBlock)
+		callbacksOnNewTxAddr = append(callbacksOnNewTxAddr, publicServer.OnNewTxAddr)
+		callbacksOnNewTx = append(callbacksOnNewTx, publicServer.OnNewTx)
+		callbacksOnNewFiatRatesTicker = append(callbacksOnNewFiatRatesTicker, publicServer.OnNewFiatRatesTicker)
+		publicServer.ConnectFullPublicInterface()
 	}
 
 	if *blockFrom >= 0 {
@@ -422,7 +426,7 @@ func startPublicServer() (*server.PublicServer, error) {
 
 	// Check if the API-before-sync flag is set
 	if *enableAPIBeforeSyncFlag {
-		startFullPublicInterface(publicServer)
+		publicServer.ConnectFullPublicInterface()
 	}
 
 	go func() {
@@ -437,15 +441,11 @@ func startPublicServer() (*server.PublicServer, error) {
 		}
 	}()
 
+	// Call ConnectFullPublicInterface after sync if the flag is not set
+	if !*enableAPIBeforeSyncFlag {
+		publicServer.ConnectFullPublicInterface()
+	}
 	return publicServer, err
-}
-
-func startFullPublicInterface(publicServer *server.PublicServer) {
-	callbacksOnNewBlock = append(callbacksOnNewBlock, publicServer.OnNewBlock)
-	callbacksOnNewTxAddr = append(callbacksOnNewTxAddr, publicServer.OnNewTxAddr)
-	callbacksOnNewTx = append(callbacksOnNewTx, publicServer.OnNewTx)
-	callbacksOnNewFiatRatesTicker = append(callbacksOnNewFiatRatesTicker, publicServer.OnNewFiatRatesTicker)
-	publicServer.ConnectFullPublicInterface()
 }
 
 func performRollback() error {
