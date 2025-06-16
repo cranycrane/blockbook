@@ -24,7 +24,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 				CoinSpecificData: bchain.EthereumSpecificData{
 					Tx: &bchain.RpcTransaction{
 						From:    "0xc88bb5a4636463d7eb2af02ccabb8b790fb200a9",
-						To:      "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",                                                                                                 // kontrakt
+						To:      "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",                                                                                                 // contract
 						Payload: "0xa9059cbb0000000000000000000000418da98894069283ddf2379e0b27bfea76fc9b73990000000000000000000000000000000000000000000000000000000022eda680", // transfer(address,uint256)
 					},
 					Receipt: &bchain.RpcReceipt{
@@ -60,7 +60,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 					Tx: &bchain.RpcTransaction{
 						From:    "0x34627862d50389c8d7a1ab5ef074b84ab4ddb9e9",
 						To:      "0x0b17822171ee88e98d4a61029f97c9f8edc15fcd",
-						Payload: "0x23b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f", // volitelné – není potřeba u log-based NFT přenosu
+						Payload: "0x23b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f",
 					},
 					Receipt: &bchain.RpcReceipt{
 						Logs: []*bchain.RpcLog{
@@ -96,7 +96,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromLog(t *testing.T) {
 					Tx: &bchain.RpcTransaction{
 						From:    "0x46f67edfe3080971e39c7e099d50ec5d86f2cb06",
 						To:      "0xec3dc0f7b89a6463eb05527fdaf3634db481fe61",
-						Payload: "0xf242432a00000000000000000000000046f67edfe3080971e39c7e099d50ec5d86f2cb060000000000000000000000008227ecc55945f98c3dd10a8f461a4d7db126fdba000000000000000000000000000000000000000019efcdb92505463d0bebd400000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000", // volitelné – není potřeba u log-based NFT přenosu
+						Payload: "0xf242432a00000000000000000000000046f67edfe3080971e39c7e099d50ec5d86f2cb060000000000000000000000008227ecc55945f98c3dd10a8f461a4d7db126fdba000000000000000000000000000000000000000019efcdb92505463d0bebd400000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000a00000000000000000000000000000000000000000000000000000000000000000",
 					},
 					Receipt: &bchain.RpcReceipt{
 						Logs: []*bchain.RpcLog{
@@ -170,7 +170,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromTx(t *testing.T) {
 				CoinSpecificData: bchain.EthereumSpecificData{
 					Tx: &bchain.RpcTransaction{
 						From:    "0xc88bb5a4636463d7eb2af02ccabb8b790fb200a9",
-						To:      "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",                                                                                                 // kontrakt
+						To:      "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",                                                                                                 // contrakt
 						Payload: "0xa9059cbb0000000000000000000000418da98894069283ddf2379e0b27bfea76fc9b73990000000000000000000000000000000000000000000000000000000022eda680", // transfer(address,uint256)
 					},
 				},
@@ -193,7 +193,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromTx(t *testing.T) {
 					Tx: &bchain.RpcTransaction{
 						From:    "0x34627862d50389c8d7a1ab5ef074b84ab4ddb9e9",
 						To:      "0x0b17822171ee88e98d4a61029f97c9f8edc15fcd",
-						Payload: "0x23b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f", // volitelné – není potřeba u log-based NFT přenosu
+						Payload: "0x23b872dd00000000000000000000000034627862d50389c8d7a1ab5ef074b84ab4ddb9e90000000000000000000000000cecca0e53477d2b6c562ab68c3452fc99f7817e000000000000000000000000000000000000000000000000000000000000067f",
 					},
 				},
 			},
