@@ -6,10 +6,11 @@ import (
 	"bytes"
 	"encoding/hex"
 	"encoding/json"
-	"github.com/stretchr/testify/require"
-	"github.com/trezor/blockbook/bchain"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
+	"github.com/trezor/blockbook/bchain"
 )
 
 func TestTronParser_GetAddrDescFromAddress(t *testing.T) {
@@ -129,30 +130,40 @@ func TestFromTronAddressToHex(t *testing.T) {
 	parser := NewTronParser(1, false)
 
 	tests := []struct {
-		name     string
-		input    string
-		expected string
+		name        string
+		input       string
+		expected    string
+		expectError bool
 	}{
 		{
-			name:     "Valid Base58 Tron address",
-			input:    "TJngGWiRMLgNFScEybQxLEKQMNdB4nR6Vx",
-			expected: "0x60bb513e91aa723a10a4020ae6fcce39bce7e240",
+			name:        "Valid Base58 Tron address",
+			input:       "TJngGWiRMLgNFScEybQxLEKQMNdB4nR6Vx",
+			expected:    "0x60bb513e91aa723a10a4020ae6fcce39bce7e240",
+			expectError: false,
 		},
 		{
-			name:     "Invalid Tron address",
-			input:    "INVALID_ADDRESS",
-			expected: "INVALID_ADDRESS", // fallback
+			name:        "Invalid Tron address",
+			input:       "INVALID_ADDRESS",
+			expected:    "", // should return empty string on error
+			expectError: true,
 		},
 		{
-			name:     "Already hex address",
-			input:    "0x60bb513e91aa723a10a4020ae6fcce39bce7e240",
-			expected: "0x60bb513e91aa723a10a4020ae6fcce39bce7e240", // fallback
+			name:        "Already hex address",
+			input:       "0x60bb513e91aa723a10a4020ae6fcce39bce7e240",
+			expected:    "0x60bb513e91aa723a10a4020ae6fcce39bce7e240",
+			expectError: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := parser.FromTronAddressToHex(tt.input)
+			result, err := parser.FromTronAddressToHex(tt.input)
+
+			if (err != nil) != tt.expectError {
+				t.Errorf("FromTronAddressToHex(%s) unexpected error state: got err=%v, wantError=%v", tt.input, err, tt.expectError)
+				return
+			}
+
 			if result != tt.expected {
 				t.Errorf("FromTronAddressToHex(%s) = %s; want %s", tt.input, result, tt.expected)
 			}
