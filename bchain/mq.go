@@ -103,7 +103,7 @@ func (mq *MQ) run(callback func(NotificationType)) {
 			repeatedError = false
 		}
 
-		if len(msg) >= 2 { // why 3?
+		if len(msg) >= 2 { // we received at least topic and payload
 			var nt NotificationType
 			switch string(msg[0]) {
 			case mq.subs.BlockReceive:
