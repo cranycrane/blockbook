@@ -25,6 +25,7 @@ const EtherAmountDecimalPoint = 18
 type EthereumLikeParser interface {
 	bchain.BlockChainParser
 	ethTxToTx(tx *bchain.RpcTransaction, receipt *bchain.RpcReceipt, internalData *bchain.EthereumInternalData, blocktime int64, confirmations uint32, fixEIP55 bool) (*bchain.Tx, error)
+	SetEnsSuffix(suffix string)
 }
 
 // EthereumParser handle
@@ -70,6 +71,10 @@ type rpcBlockTransactions struct {
 
 type rpcBlockTxids struct {
 	Transactions []string `json:"transactions"`
+}
+
+func (p *EthereumParser) SetEnsSuffix(suffix string) {
+	p.EnsSuffix = suffix
 }
 
 func ethNumber(n string) (int64, error) {
