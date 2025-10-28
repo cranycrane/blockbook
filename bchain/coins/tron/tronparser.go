@@ -4,9 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/decred/base58"
+	"github.com/golang/glog"
 	"github.com/trezor/blockbook/bchain"
 	"github.com/trezor/blockbook/bchain/coins/eth"
 )
@@ -62,6 +64,7 @@ func (p *TronParser) GetAddrDescFromAddress(address string) (bchain.AddressDescr
 		}
 		return decoded[1:21], nil
 	} else if len(address) != TronTypeAddressDescriptorLen*2 {
+		glog.Infof("Invalid Tron address length: got %d chars: %q", len(address), address)
 		return nil, bchain.ErrAddressMissing
 	}
 
@@ -102,12 +105,12 @@ func ToTronAddressFromAddress(address string) string {
 	return ToTronAddressFromDesc(b)
 }
 
-func (p *TronParser) FromTronAddressToHex(addr string) string {
+func (p *TronParser) FromTronAddressToHex(addr string) (string, error) {
 	desc, err := p.GetAddrDescFromAddress(addr)
 	if err != nil {
-		return addr
+		return "", fmt.Errorf("failed to convert Tron address %q: %w", addr, err)
 	}
-	return "0x" + hex.EncodeToString(desc)
+	return "0x" + hex.EncodeToString(desc), nil
 }
 
 func (p *TronParser) ParseInputData(signatures *[]bchain.FourByteSignature, data string) *bchain.EthereumParsedInputData {
@@ -162,17 +165,31 @@ func (p *TronParser) EthereumTypeGetTokenTransfersFromTx(tx *bchain.Tx) (bchain.
 func (p *TronParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]byte, error) {
 	r, ok := tx.CoinSpecificData.(bchain.EthereumSpecificData)
 	if !ok {
-		return nil, errors.New("Missing CoinSpecificData")
+		return nil, errors.New("missing CoinSpecificData")
 	}
 	r.Tx.AccountNonce = SanitizeHexUint64String(r.Tx.AccountNonce)
 
-	r.Tx.From = p.FromTronAddressToHex(r.Tx.From)
-	r.Tx.To = p.FromTronAddressToHex(r.Tx.To)
+	var err error
 
-	for _, l := range r.Receipt.Logs {
-		l.Address = p.FromTronAddressToHex(l.Address)
+	r.Tx.From, err = p.FromTronAddressToHex(r.Tx.From)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert 'from' address: %w", err)
 	}
 
+	r.Tx.To, err = p.FromTronAddressToHex(r.Tx.To)
+	if err != nil {
+		return nil, fmt.Errorf("failed to convert 'to' address: %w", err)
+	}
+
+	for i, l := range r.Receipt.Logs {
+		addr, err := p.FromTronAddressToHex(l.Address)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert log[%d] address: %w", i, err)
+		}
+		l.Address = addr
+	}
+
+	tx.CoinSpecificData = r
 	return p.EthereumParser.PackTx(tx, height, blockTime)
 }
 
