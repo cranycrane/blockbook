@@ -318,7 +318,7 @@ func (b *TronRPC) getTransactionReceipt(txid string) (*bchain.RpcReceipt, error)
 	var receipt bchain.RpcReceipt
 	err := b.RPC.CallContext(ctx, &receipt, "eth_getTransactionReceipt", hash)
 	if err != nil {
-		return nil, errors.Annotatef(err, "txid %v", txid)
+		return nil, errors.Annotatef(err, "failed to get transaction receipt for txid %v", txid)
 	}
 
 	return &receipt, nil
@@ -327,7 +327,7 @@ func (b *TronRPC) getTransactionReceipt(txid string) (*bchain.RpcReceipt, error)
 // Tron does not have any method for getting mempool transactions (does not support parameter 'pending' in eth_getBlockByNumber)
 // https://developers.tron.network/reference/eth_getblockbynumber
 func (b *TronRPC) GetMempoolTransactions() ([]string, error) {
-	return nil, nil
+	return []string{}, nil
 }
 
 func (b *TronRPC) EthereumTypeGetBalance(addrDesc bchain.AddressDescriptor) (*big.Int, error) {
@@ -365,5 +365,5 @@ func (b *TronRPC) SendRawTransaction(hex string) (string, error) {
 
 // EthereumTypeGetRawTransaction is not supported by Tron JSON-RPC
 func (b *TronRPC) EthereumTypeGetRawTransaction(txid string) (string, error) {
-	return "", nil
+	return "", errors.New("EthereumTypeGetRawTransaction is not supported by Tron JSON-RPC")
 }
