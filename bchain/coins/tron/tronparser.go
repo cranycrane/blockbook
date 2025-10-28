@@ -4,10 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"strings"
+
 	"github.com/decred/base58"
 	"github.com/trezor/blockbook/bchain"
 	"github.com/trezor/blockbook/bchain/coins/eth"
-	"strings"
 )
 
 // TronTypeAddressDescriptorLen - the AddressDescriptor of TronType has fixed length
@@ -25,7 +26,7 @@ type TronParser struct {
 	*eth.EthereumParser
 }
 
-// NewTronParser vrací novou instanci TronParser
+// NewTronParser returns a new instance of TronParser
 func NewTronParser(b int, addressAliases bool) *TronParser {
 	ethParser := eth.NewEthereumParser(b, addressAliases)
 	ethParser.AmountDecimalPoint = TronAmountDecimalPoint
@@ -109,10 +110,6 @@ func (p *TronParser) FromTronAddressToHex(addr string) string {
 	return "0x" + hex.EncodeToString(desc)
 }
 
-func (p *TronParser) IsTronAddress(desc bchain.AddressDescriptor) bool {
-	return len(desc) == TronTypeAddressDescriptorLen && desc[0] == 0x41
-}
-
 func (p *TronParser) ParseInputData(signatures *[]bchain.FourByteSignature, data string) *bchain.EthereumParsedInputData {
 	parsed := p.EthereumParser.ParseInputData(signatures, data)
 
@@ -179,6 +176,7 @@ func (p *TronParser) PackTx(tx *bchain.Tx, height uint32, blockTime int64) ([]by
 	return p.EthereumParser.PackTx(tx, height, blockTime)
 }
 
+// SanitizeHexUint64String Java-Tron's JSON-RPC returns "nonce" in format that is unexpected for `hexutil.DecodeUint64` in PackTx
 func SanitizeHexUint64String(s string) string {
 	if strings.HasPrefix(s, "0x") {
 		sanitized := strings.TrimLeft(s[2:], "0")

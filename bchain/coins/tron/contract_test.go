@@ -170,7 +170,7 @@ func TestTronParser_EthereumTypeGetTokenTransfersFromTx(t *testing.T) {
 				CoinSpecificData: bchain.EthereumSpecificData{
 					Tx: &bchain.RpcTransaction{
 						From:    "0xc88bb5a4636463d7eb2af02ccabb8b790fb200a9",
-						To:      "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",                                                                                                 // contrakt
+						To:      "0xa614f803b6fd780986a42c78ec9c7f77e6ded13c",                                                                                                 // contract
 						Payload: "0xa9059cbb0000000000000000000000418da98894069283ddf2379e0b27bfea76fc9b73990000000000000000000000000000000000000000000000000000000022eda680", // transfer(address,uint256)
 					},
 				},

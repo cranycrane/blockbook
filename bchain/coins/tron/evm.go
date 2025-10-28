@@ -28,7 +28,7 @@ func (c *TronClient) EstimateGas(ctx context.Context, msg interface{}) (uint64, 
 }
 
 // BalanceAt returns the balance for the given account at a specific block, or latest known block if no block number is provided
-// Only parameter 'latest' is available
+// IMPORTANT: Tron RPC only supports 'latest' block parameter. The blockNumber parameter is ignored.
 func (c *TronClient) BalanceAt(ctx context.Context, addrDesc bchain.AddressDescriptor, blockNumber *big.Int) (*big.Int, error) {
 	var result hexutil.Big
 	err := c.rpcClient.CallContext(ctx, &result, "eth_getBalance", common.BytesToAddress(addrDesc), "latest")
@@ -264,6 +264,15 @@ func (c *TronRPCClient) CallContext(ctx context.Context, result interface{}, met
 	return json.Unmarshal(rawData, result)
 }
 
+// fixStateRoot works around Tron JSON-RPC returning stateRoot in a format incompatible with go-ethereum
+// Issue: Tron returns stateRoot as "0x" (empty) or with incorrect length, which causes go-ethereum
+// deserialization to fail since it expects a valid 32-byte hash (66 chars: "0x" + 64 hex digits)
+//
+// This is likely because Tron uses a different state storage mechanism than Ethereum's MPT (Merkle Patricia Tree),
+// but still tries to maintain API compatibility. The stateRoot field may not have the same meaning in Tron.
+//
+// Workaround: Replace invalid stateRoot with a zero hash to allow successful parsing by go-ethereum library
+// Reference: https://github.com/tronprotocol/java-tron/issues/5518
 func fixStateRoot(data []byte) ([]byte, error) {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(data, &raw); err != nil {
