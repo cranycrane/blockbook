@@ -3,6 +3,7 @@ package tron
 import (
 	"context"
 	"encoding/json"
+
 	ethcommon "github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/ethereum/go-ethereum/log"
@@ -359,7 +360,7 @@ func (b *TronRPC) GetContractInfo(contractDesc bchain.AddressDescriptor) (*bchai
 
 // SendRawTransaction is not supported by Tron JSON-RPC
 func (b *TronRPC) SendRawTransaction(hex string) (string, error) {
-	return "", nil
+	return "", errors.New("SendRawTransaction is not supported by Tron JSON-RPC")
 }
 
 // EthereumTypeGetRawTransaction is not supported by Tron JSON-RPC

@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math/big"
+
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	ethcommon "github.com/ethereum/go-ethereum/common"
@@ -13,7 +15,11 @@ import (
 	"github.com/ethereum/go-ethereum/rpc"
 	"github.com/juju/errors"
 	"github.com/trezor/blockbook/bchain"
-	"math/big"
+)
+
+const (
+	MainnetGenesisHash     = "0x2b6653dc"
+	NileTestnetGenesisHash = "0xcd8690dc"
 )
 
 // TronClient wraps the original go-ethereum Client and adds Tron-specific methods
@@ -186,10 +192,10 @@ func (c *TronClient) NetworkID(ctx context.Context) (*big.Int, error) {
 	}
 
 	switch ver {
-	case "0x2b6653dc":
-		return big.NewInt(11111), nil
-	case "0xcd8690dc":
-		return big.NewInt(201910292), nil
+	case MainnetGenesisHash:
+		return big.NewInt(int64(MainNet)), nil
+	case NileTestnetGenesisHash:
+		return big.NewInt(int64(TestNetNile)), nil
 	default:
 		return nil, fmt.Errorf("invalid net_version result %q", ver)
 	}
