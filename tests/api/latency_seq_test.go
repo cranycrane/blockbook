@@ -1,5 +1,7 @@
 //go:build integration
 
+// NOTE: Blockbook must have the `notxcache` set to TRUE so the benchmarks are correct
+
 package api
 
 import (
