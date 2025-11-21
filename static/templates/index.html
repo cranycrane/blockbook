@@ -32,7 +32,7 @@
                 </tr>
                 <tr>
                     <td>Last Block</td>
-                    <td>{{if .InternalExplorer}}<a href="/block/{{$bb.BestHeight}}">{{formatUint32 $bb.BestHeight}}</a>{{else}}{{formatUint32 $bb.BestHeight}}{{end}}</td>
+                    <td>{{if .InternalExplorer}}<a href="/tests/api/testdata/tron/block/{{$bb.BestHeight}}">{{formatUint32 $bb.BestHeight}}</a>{{else}}{{formatUint32 $bb.BestHeight}}{{end}}</td>
                 </tr>
                 <tr>
                     <td>Last Block Update</td>

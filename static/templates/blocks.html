@@ -18,7 +18,7 @@
         <tbody>
             {{range $b := $blocks.Blocks}}
             <tr>
-                <td><a href="/block/{{$b.Height}}">{{formatUint32 $b.Height}}</a></td>
+                <td><a href="/tests/api/testdata/tron/block/{{$b.Height}}">{{formatUint32 $b.Height}}</a></td>
                 <td class="ellipsis">{{$b.Hash}}</td>
                 <td>{{unixTimeSpan $b.Time}}</td>
                 <td class="text-end">{{formatUint32 $b.Txs}}</td>

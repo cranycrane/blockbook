@@ -60,13 +60,13 @@
         {{if $addr.ContractInfo.CreatedInBlock}}
         <tr>
             <td style="width: 25%;">Created in Block</td>
-            <td><a href="/block/{{$addr.ContractInfo.CreatedInBlock}}">{{formatUint32 $addr.ContractInfo.CreatedInBlock}}</a></td>
+            <td><a href="/tests/api/testdata/tron/block/{{$addr.ContractInfo.CreatedInBlock}}">{{formatUint32 $addr.ContractInfo.CreatedInBlock}}</a></td>
         </tr>
         {{end}}
         {{if $addr.ContractInfo.DestructedInBlock}}
         <tr>
             <td style="width: 25%;">Destructed in Block</td>
-            <td><a href="/block/{{$addr.ContractInfo.DestructedInBlock}}">{{formatUint32 $addr.ContractInfo.DestructedInBlock}}</a></td>
+            <td><a href="/tests/api/testdata/tron/block/{{$addr.ContractInfo.DestructedInBlock}}">{{formatUint32 $addr.ContractInfo.DestructedInBlock}}</a></td>
         </tr>
         {{end}}
         {{end}}

@@ -20,7 +20,7 @@
         {{if $tx.Confirmations}}
         <tr>
             <td>In Block Height</td>
-            <td><a href="/block/{{$tx.Blockheight}}">{{formatInt $tx.Blockheight}}</a></td>
+            <td><a href="/tests/api/testdata/tron/block/{{$tx.Blockheight}}">{{formatInt $tx.Blockheight}}</a></td>
         </tr>{{end}}
         {{if $tx.EthereumSpecific}}
         <tr>
