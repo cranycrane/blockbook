@@ -16,7 +16,6 @@ func TestBlockLatencyBenchmarkSequential(t *testing.T) {
 	stop := startMonitor(10*time.Millisecond, file)
 	defer func() { printStats(t, stop(), "seq") }()
 
-	// parse -blocks=65000000-65000049
 	heights := parseBlockRange(t, *blocksArg)
 
 	client := &http.Client{Timeout: 10 * time.Second}
